@@ -287,7 +287,7 @@ export default function Home() {
 
           <div className="flex justify-center mt-12">
             <a
-              href="https://wa.me/5511999999999?text=Olá,%20Dr.%20Amado.%20Gostaria%20de%20avaliar%20meu%20caso%20médico."
+              href="https://wa.me/5548998003471?text=Olá,%20Dr.%20Amado.%20Gostaria%20de%20avaliar%20meu%20caso."
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center gap-2 px-8 py-3.5 rounded-full text-xs font-bold uppercase tracking-wider text-white bg-[#263A2D] border-2 border-zinc-700 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all duration-200 cursor-pointer"

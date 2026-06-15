@@ -25,7 +25,7 @@ export default function Navbar() {
     { name: "Áreas de Atuação", href: "#atuacao" },
     { name: "Depoimentos", href: "#depoimentos" },
     { name: "Sobre", href: "#sobre" },
-    { name: "Dúvidas", href: "#faq" },
+    { name: "Blog", href: "/blog" },
     { name: "Contato", href: "#contato" },
   ];
 
@@ -59,7 +59,7 @@ export default function Navbar() {
             {/* Desktop CTA Action Button */}
             <div className="hidden lg:block">
               <a
-                href="https://wa.me/5511999999999?text=Olá,%20Dr.%20Eduardo.%20Gostaria%20de%20agendar%20uma%20consulta."
+                href="https://wa.me/5548998003471?text=Olá,%20Dr.%20Amado.%20Gostaria%20de%20agendar%20uma%20consulta."
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center gap-2 px-5 py-2 rounded-full text-xs font-bold uppercase tracking-wider text-emerald-950 bg-gold border-2 border-zinc-700 hover:bg-gold-light shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all duration-200 cursor-pointer"
@@ -99,7 +99,7 @@ export default function Navbar() {
               ))}
             </nav>
             <a
-              href="https://wa.me/5511999999999?text=Olá,%20Dr.%20Eduardo.%20Gostaria%20de%20agendar%20uma%20consulta."
+              href="https://wa.me/5548998003471?text=Olá,%20Dr.%20Amado.%20Gostaria%20de%20agendar%20uma%20consulta."
               target="_blank"
               rel="noopener noreferrer"
               onClick={() => setIsOpen(false)}
