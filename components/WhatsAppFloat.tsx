@@ -7,7 +7,7 @@ import WhatsAppIcon from "@/components/icons/WhatsApp";
 export default function WhatsAppFloat() {
   return (
     <a
-      href="https://wa.me/5511999999999?text=Olá,%20Dr.%20Amado.%20Gostaria%20de%20conversar%20sobre%20meu%20caso%20médico."
+      href="https://wa.me/5548998003471?text=Olá,%20Dr.%20Amado.%20Gostaria%20de%20conversar%20sobre%20meu%20caso%20médico."
       target="_blank"
       rel="noopener noreferrer"
       draggable="false"

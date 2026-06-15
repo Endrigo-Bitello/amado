@@ -140,7 +140,7 @@ export default function Quiz() {
         </p>
         {temp === "hot" && (
           <a
-            href={`https://wa.me/5511999999999?text=Olá, fiz o quiz no site e gostaria de confirmar meu atendimento. Meu nome é ${encodeURIComponent(lead.nome || "")}.`}
+            href={`https://wa.me/5548998003471?text=Olá, fiz o quiz no site e gostaria de confirmar meu atendimento. Meu nome é ${encodeURIComponent(lead.nome || "")}.`}
             target="_blank"
             rel="noopener noreferrer"
             className="flex items-center gap-2 px-6 py-3 rounded-full bg-[#263A2D] text-white text-sm font-bold uppercase tracking-wider shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all"

@@ -168,7 +168,7 @@ export default function Home() {
                   <span>Avaliação Gratuita</span>
                 </a>
                 <a
-                  href="https://wa.me/5511999999999?text=Olá,%20Dr.%20Amado.%20Gostaria%20de%20conversar%20sobre%20o%20Habeas%20Corpus%20para%20cultivo%20medicinal."
+                  href="https://wa.me/5548998003471?text=Olá,%20Dr.%20Amado.%20Gostaria%20de%20conversar%20sobre%20o%20Habeas%20Corpus%20para%20cultivo%20medicinal."
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex items-center justify-center gap-2 px-6 py-3.5 rounded-full text-xs font-bold uppercase tracking-wider text-[#263A2D] bg-transparent border-2 border-zinc-300 hover:border-zinc-500 transition-all duration-200 cursor-pointer whitespace-nowrap"
@@ -236,7 +236,7 @@ export default function Home() {
                   </p>
                 </div>
                 <a 
-                  href={`https://wa.me/5511999999999?text=Olá Dr. Amado. Gostaria de entender mais sobre o serviço: ${service.title}`}
+                  href={`https://wa.me/5548998003471?text=Olá Dr. Amado. Gostaria de entender mais sobre o serviço: ${service.title}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-gold hover:text-gold-light transition-colors duration-300"

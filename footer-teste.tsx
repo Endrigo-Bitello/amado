@@ -26,7 +26,7 @@ const Footer = () => {
               Escritório boutique especializado na garantia do acesso seguro à Cannabis Medicinal. Amparo técnico para Habeas Corpus preventivo de cultivo próprio e judicialização de tratamentos de saúde de alta complexidade.
             </p>
             <a 
-              href="https://wa.me/5511999999999?text=Olá, Dr. Amado."
+              href="https://wa.me/5548998003471?text=Olá, Dr. Amado."
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-[10px] font-bold uppercase tracking-wider text-white bg-[#263A2D] hover:bg-[#285E31] border-2 border-zinc-700 shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all duration-200"
