@@ -20,7 +20,7 @@ const Footer = () => {
               href="#inicio" 
               className="font-serif tracking-wider text-xl md:text-2xl text-[#263A2D] hover:text-[#285E31] transition-colors duration-300 font-bold block mb-4"
             >
-              Amado <span className="text-emerald-800 font-light">Jr.</span>
+              Amado <span className="text-emerald-800 font-light">&amp; Amado Jr.</span>
             </a>
             <p className="text-xs text-zinc-650 leading-relaxed max-w-sm mb-6 font-medium">
               Escritório boutique especializado na garantia do acesso seguro à Cannabis Medicinal. Amparo técnico para Habeas Corpus preventivo de cultivo próprio e judicialização de tratamentos de saúde de alta complexidade.
@@ -40,11 +40,11 @@ const Footer = () => {
           <div className="md:col-span-4 text-left">
             <h4 className="text-[10px] uppercase tracking-widest text-[#285E31] font-bold mb-4">Compromisso & Ética</h4>
             <p className="text-[10px] text-zinc-550 leading-relaxed font-medium">
-              Bacharel em Direito, especialista em Direito Canábico. Este material possui caráter estritamente educativo e informativo sobre direitos dos pacientes, sendo vedada qualquer promessa de resultado judicial.
+              Bacharel em Direito (UFSC/2024) · Especialista em Direito Canábico. Atendimento presencial em Florianópolis/SC e videochamada em todo o Brasil. Este material possui caráter estritamente educativo e informativo sobre direitos dos pacientes, sendo vedada qualquer promessa de resultado judicial.
             </p>
             <div className="mt-4 space-y-1 text-[10px] text-zinc-500 font-medium">
-              <p>eamadojunior@gmail.com</p>
-              <p>(48) 99800-3471</p>
+              <p>contato@amadoeamadojr.com.br</p>
+              <p>(48) 9 9800-3471</p>
               <p>Rua Dr. Heitor Blum, 310 — Sala 801</p>
               <p>Florianópolis/SC, CEP 88075-110</p>
             </div>

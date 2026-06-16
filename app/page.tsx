@@ -509,63 +509,76 @@ export default function Home() {
             
             {/* About Copywriting Left */}
             <div className="lg:col-span-7 text-left">
-              <div className="text-xs uppercase tracking-widest text-gold-light font-bold mb-2">Direito à Vida Digna</div>
+              <div className="text-xs uppercase tracking-widest text-gold-light font-bold mb-2">Um escritório de pai e filho</div>
               <h2 className="font-serif text-3xl md:text-4xl lg:text-4.5xl font-medium text-white tracking-tight mb-6">
-                Contra a discriminação, pela bioética médica
+                Missão: discriminar, desburocratizar e lucrar com a planta
               </h2>
               <div className="h-[2px] bg-[#375a40] w-24 mb-6" />
-              
+
               <div className="space-y-5 text-zinc-300 text-sm md:text-base leading-relaxed font-medium">
                 <p>
-                  O advogado <strong>Amado Jr.</strong> pauta sua atuação jurídica sob um princípio fundamental: o tratamento médico com Cannabis não pode ser tratado como caso de polícia ou marginalizado. Focado na bioética e no acolhimento humano, seu propósito é servir de escudo contra a repressão criminal e a desinformação que impedem pacientes de acessarem uma terapia segura.
+                  O escritório <strong>Amado & Amado Jr.</strong> nasceu da união de duas gerações do Direito. <strong>Amado</strong>, bacharel em Direito pela UFSC (1983), traz décadas de experiência processual e a solidez técnica de quem construiu carreira sob os pilares da ética e do rigor. <strong>Eduardo Amado Jr.</strong>, bacharel em Direito (2024) e especialista em Direito Canábico, ingressou na advocacia com um propósito claro: tornar o acesso legal à Cannabis medicinal uma realidade acessível, segura e sem burocracia para cada brasileiro.
                 </p>
                 <p>
-                  Trabalhando lado a lado com médicos, clínicos e associações científicas, desenvolve fundamentações técnicas sólidas para garantir que o judiciário enxergue o cultivo e a importação de Cannabis como o que verdadeiramente são: atos indispensáveis de saúde, alívio de dor e dignidade humana.
+                  Desde 2022, Eduardo Amado Jr. acumula vasta experiência no campo do Direito Canábico, tendo conquistado mais de <strong>300 Habeas Corpus preventivos — todos deferidos</strong>. Além disso, estruturou juridicamente 2 associações de pacientes e legalizou 5 fazendas de Cannabis medicinal com fins lucrativos, todas autorizadas pela <strong>RDC 1013 da ANVISA</strong>.
+                </p>
+                <p>
+                  O atendimento é realizado presencialmente em <strong>Florianópolis/SC</strong> e por videochamada em todo o Brasil — porque o Direito à saúde não tem fronteira.
                 </p>
               </div>
 
               {/* Custom Quote Callout - Comic-Bubble Inspired styling */}
               <div className="relative pl-5 py-2.5 mt-8 bg-white border-2 border-l-[6px] border-zinc-700 rounded-r-xl shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
                 <p className="font-serif italic text-zinc-700 text-sm md:text-base leading-relaxed font-medium">
-                  &ldquo;Seu tratamento fitoterápico é um ato de preservação da vida. Nenhuma barreira policial ou preconceito corporativo deve retirar de você o direito de viver com dignidade e paz.&rdquo;
+                  &ldquo;No final, você terá o direito de estar sempre na razão perante seus pares — ou de lucrar legalmente com a Cannabis no Brasil. Essa é a transformação que entregamos.&rdquo;
                 </p>
                 <footer className="text-xs uppercase tracking-wider text-emerald-900 font-bold mt-2">
-                  — Dr. Amado Jr.
+                  — Eduardo Amado Jr.
                 </footer>
               </div>
             </div>
 
             {/* About Credentials Right */}
             <div className="lg:col-span-5 bg-[#FAF8F5] border-2 border-zinc-700 rounded-3xl p-7 shadow-[6px_6px_0px_0px_rgba(0,0,0,1)]">
-              <h3 className="font-serif text-xl text-[#263A2D] font-bold mb-5">Valores Profissionais</h3>
-              
-              <ul className="space-y-4">
+              <h3 className="font-serif text-xl text-[#263A2D] font-bold mb-5">Resultados Reais</h3>
+
+              <div className="grid grid-cols-2 gap-4 mb-6">
+                <div className="bg-white border-2 border-zinc-700 rounded-2xl p-4 shadow-[3px_3px_0px_0px_#263A2D] text-center">
+                  <div className="font-serif text-3xl font-bold text-[#263A2D]">+300</div>
+                  <div className="text-[10px] uppercase tracking-wider text-zinc-500 font-bold mt-1">Habeas Corpus<br/>todos deferidos</div>
+                </div>
+                <div className="bg-white border-2 border-zinc-700 rounded-2xl p-4 shadow-[3px_3px_0px_0px_#263A2D] text-center">
+                  <div className="font-serif text-3xl font-bold text-[#263A2D]">5</div>
+                  <div className="text-[10px] uppercase tracking-wider text-zinc-500 font-bold mt-1">Fazendas<br/>legalizadas RDC 1013</div>
+                </div>
+                <div className="bg-white border-2 border-zinc-700 rounded-2xl p-4 shadow-[3px_3px_0px_0px_#263A2D] text-center">
+                  <div className="font-serif text-3xl font-bold text-[#263A2D]">2</div>
+                  <div className="text-[10px] uppercase tracking-wider text-zinc-500 font-bold mt-1">Associações<br/>abertas</div>
+                </div>
+                <div className="bg-white border-2 border-zinc-700 rounded-2xl p-4 shadow-[3px_3px_0px_0px_#263A2D] text-center">
+                  <div className="font-serif text-3xl font-bold text-[#263A2D]">2022</div>
+                  <div className="text-[10px] uppercase tracking-wider text-zinc-500 font-bold mt-1">Atuando em<br/>Direito Canábico</div>
+                </div>
+              </div>
+
+              <ul className="space-y-3">
                 <li className="flex gap-3">
-                  <CheckCircle2 className="text-[#285E31] flex-shrink-0 mt-0.5" size={18} />
-                  <div>
-                    <h4 className="text-sm font-bold text-zinc-950">Acolhimento Sem Estigmas</h4>
-                    <p className="text-xs text-zinc-600 mt-0.5 leading-relaxed font-medium">Sua história e patologia tratadas com o absoluto respeito, ética e ausência total de qualquer preconceito.</p>
-                  </div>
+                  <CheckCircle2 className="text-[#285E31] flex-shrink-0 mt-0.5" size={16} />
+                  <p className="text-xs text-zinc-600 leading-relaxed font-medium">Presencial em Florianópolis/SC — Videochamada em todo o Brasil</p>
                 </li>
                 <li className="flex gap-3">
-                  <CheckCircle2 className="text-[#285E31] flex-shrink-0 mt-0.5" size={18} />
-                  <div>
-                    <h4 className="text-sm font-bold text-zinc-950">Segurança Jurídica Preventiva</h4>
-                    <p className="text-xs text-zinc-600 mt-0.5 leading-relaxed font-medium">Construção técnica rigorosa de Habeas Corpus para anular riscos de persecução penal e repressão.</p>
-                  </div>
+                  <CheckCircle2 className="text-[#285E31] flex-shrink-0 mt-0.5" size={16} />
+                  <p className="text-xs text-zinc-600 leading-relaxed font-medium">Especialista em HC preventivo, associações e empresas cannábicas (RDC 1013)</p>
                 </li>
                 <li className="flex gap-3">
-                  <CheckCircle2 className="text-[#285E31] flex-shrink-0 mt-0.5" size={18} />
-                  <div>
-                    <h4 className="text-sm font-bold text-zinc-950">Fundamentação Científica</h4>
-                    <p className="text-xs text-zinc-600 mt-0.5 leading-relaxed font-medium">Nossas petições unem a ciência médica com as leis sanitárias da ANVISA, gerando altas taxas de sucesso.</p>
-                  </div>
+                  <CheckCircle2 className="text-[#285E31] flex-shrink-0 mt-0.5" size={16} />
+                  <p className="text-xs text-zinc-600 leading-relaxed font-medium">Sigilo médico-jurídico absoluto. Segredo de Justiça garantido por lei.</p>
                 </li>
               </ul>
 
-              <div className="mt-8 pt-5 border-t border-zinc-200 flex items-center justify-between text-xs font-bold">
-                <span className="text-zinc-700">Garantia Profissional</span>
-                <span className="text-emerald-800 font-bold uppercase tracking-wider">Sigilo Médico-Jurídico</span>
+              <div className="mt-6 pt-5 border-t border-zinc-200 flex items-center justify-between text-xs font-bold">
+                <span className="text-zinc-700">Pai & Filho · Duas gerações</span>
+                <span className="text-emerald-800 font-bold uppercase tracking-wider">Desde 2022</span>
               </div>
             </div>
 
@@ -665,7 +678,7 @@ export default function Home() {
                     </div>
                     <div>
                       <h4 className="text-[10px] uppercase tracking-wider text-zinc-550 font-bold">E-mail</h4>
-                      <p className="text-xs text-zinc-600 mt-0.5 font-medium">eamadojunior@gmail.com</p>
+                      <p className="text-xs text-zinc-600 mt-0.5 font-medium">contato@amadoeamadojr.com.br</p>
                     </div>
                   </div>
                   <div className="flex gap-3.5">
@@ -684,6 +697,15 @@ export default function Home() {
                     <div>
                       <h4 className="text-[10px] uppercase tracking-wider text-zinc-550 font-bold">Formação</h4>
                       <p className="text-xs text-zinc-600 mt-0.5 font-medium">Bacharel em Direito · Especialista em Direito Canábico</p>
+                    </div>
+                  </div>
+                  <div className="flex gap-3.5">
+                    <div className="w-9 h-9 rounded-lg bg-[#FAF8F5] border-2 border-zinc-700 text-[#285E31] flex items-center justify-center flex-shrink-0">
+                      <Users size={16} />
+                    </div>
+                    <div>
+                      <h4 className="text-[10px] uppercase tracking-wider text-zinc-550 font-bold">Atendimento</h4>
+                      <p className="text-xs text-zinc-600 mt-0.5 font-medium">Presencial em Florianópolis/SC<br />Videochamada em todo o Brasil</p>
                     </div>
                   </div>
                 </div>
