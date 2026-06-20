@@ -44,13 +44,13 @@ export const QUIZ_STEPS: QuizStep[] = [
   },
   {
     id: "renda",
-    question: "Qual é a sua profissão e faixa de renda aproximada?",
+    question: "Qual é a sua profissão?",
     subtitle: "Usamos essa informação apenas para entender melhor o seu perfil e adequar o atendimento.",
     type: "two_fields",
     fields: [
       { name: "profissao", placeholder: "Sua profissão" }
     ],
-    internal_purpose: "Coleta profissão + qualifica renda abaixo"
+    internal_purpose: "Coleta profissão — faixa de renda no passo seguinte"
   },
   {
     id: "faixaRenda",

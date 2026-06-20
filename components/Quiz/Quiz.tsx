@@ -1,11 +1,13 @@
 "use client";
 
 import { useState, useRef } from "react";
+import Image from "next/image";
 import { motion, AnimatePresence } from "motion/react";
 import { ChevronRight, ChevronLeft, Check, Calendar, Phone } from "lucide-react";
 import { QUIZ_STEPS } from "./steps";
 import { classifyLead, buildObservacoes } from "./scoring";
 import { LeadData, Classification } from "./types";
+import LocationPicker from "./LocationPicker";
 
 const EMPTY_LEAD: Partial<LeadData> = {
   nome: "", whatsapp: "", email: "", estado: "", municipio: "",
@@ -28,6 +30,7 @@ export default function Quiz() {
   const [done, setDone] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [lgpd, setLgpd] = useState(false);
+  const [location, setLocation] = useState({ estado: "", municipio: "" });
   const formRef = useRef<HTMLFormElement>(null);
 
   const step = QUIZ_STEPS[stepIndex];
@@ -72,14 +75,14 @@ export default function Quiz() {
   };
 
   const handleTwoFields = () => {
-    if (!formRef.current) return;
-    const fd = new FormData(formRef.current);
     const updates: Partial<LeadData> = {};
     if (step.id === "location") {
-      updates.estado = fd.get("estado") as string;
-      updates.municipio = fd.get("municipio") as string;
+      updates.estado = location.estado;
+      updates.municipio = location.municipio;
     }
     if (step.id === "renda") {
+      if (!formRef.current) return;
+      const fd = new FormData(formRef.current);
       updates.profissao = fd.get("profissao") as string;
     }
     goNext(0, updates);
@@ -154,15 +157,23 @@ export default function Quiz() {
   }
 
   return (
-    <div className="relative w-full overflow-hidden">
-      {/* Progress bar */}
-      <div className="w-full h-1 bg-zinc-200 rounded-full mb-8">
-        <div
-          className="h-1 bg-[#263A2D] rounded-full transition-all duration-500"
-          style={{ width: `${((stepIndex + 1) / QUIZ_STEPS.length) * 100}%` }}
-        />
+    <div className="relative w-full">
+      {/* Progress bar — 3D green, centered */}
+      <div className="mx-auto w-full max-w-md mb-10">
+        <div className="relative h-5 w-full rounded-full bg-zinc-200 shadow-[inset_0_2px_5px_rgba(0,0,0,0.2)] overflow-hidden">
+          <div
+            className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-b from-[#3c5c47] via-[#2f4a38] to-[#1c2e22] shadow-[inset_0_1px_1px_rgba(255,255,255,0.35),0_2px_5px_rgba(0,0,0,0.3)] transition-all duration-500 ease-out"
+            style={{ width: `${((stepIndex + 1) / QUIZ_STEPS.length) * 100}%` }}
+          >
+            <div className="absolute inset-x-0 top-0 h-1/2 rounded-t-full bg-white/25" />
+          </div>
+        </div>
+        <p className="mt-2.5 text-center text-[11px] uppercase tracking-widest text-zinc-400 font-bold">
+          {stepIndex + 1} de {QUIZ_STEPS.length}
+        </p>
       </div>
 
+      <div className="-mx-2 overflow-x-clip px-2 pb-2">
       <AnimatePresence mode="wait" custom={direction}>
         <motion.div
           key={step.id}
@@ -174,17 +185,35 @@ export default function Quiz() {
           transition={{ duration: 0.25, ease: "easeInOut" }}
           className="w-full"
         >
-          <div className="mb-6">
-            <p className="text-xs uppercase tracking-widest text-zinc-400 font-bold mb-2">
-              {stepIndex + 1} de {QUIZ_STEPS.length}
-            </p>
-            <h3 className="font-serif text-xl md:text-2xl font-medium text-[#263A2D] leading-snug mb-2">
-              {step.question}
-            </h3>
-            {step.subtitle && (
-              <p className="text-sm text-zinc-500 leading-relaxed">{step.subtitle}</p>
-            )}
+          {/* Avatar + speech bubble */}
+          <div className="mb-5 flex items-start gap-3 sm:gap-5">
+            <div className="relative shrink-0 h-12 w-12 sm:h-20 sm:w-20 overflow-hidden rounded-full bg-[#f0f5f1] ring-2 ring-[#263A2D]/10">
+              <Image
+                src="/assets/amado-icon.png"
+                alt="Advogado Amado"
+                fill
+                sizes="(max-width: 640px) 48px, 80px"
+                className="object-cover"
+                priority
+              />
+            </div>
+            <div className="relative flex-1 rounded-2xl rounded-tl-sm bg-[#f0f5f1] border-2 border-[#263A2D]/10 px-4 py-3.5 sm:px-6 sm:py-5">
+              {/* tail pointing to avatar */}
+              <span className="absolute -left-[9px] top-4 sm:top-5 h-4 w-4 rotate-45 bg-[#f0f5f1] border-l-2 border-b-2 border-[#263A2D]/10" />
+              <h3 className="font-serif text-lg sm:text-xl md:text-2xl font-medium text-[#263A2D] leading-snug">
+                {step.question}
+              </h3>
+            </div>
           </div>
+
+          {/* Extra comment / instruction — outside, below bubble */}
+          {step.subtitle && (
+            <div className="mb-6 border-l-[3px] border-[#263A2D]/30 pl-4">
+              <p className="text-sm sm:text-[15px] text-zinc-600 leading-relaxed [&_strong]:font-semibold [&_strong]:text-[#263A2D]">
+                {step.subtitle}
+              </p>
+            </div>
+          )}
 
           {/* Single choice */}
           {step.type === "single_choice" && step.options && (
@@ -205,19 +234,24 @@ export default function Quiz() {
           {/* Two fields */}
           {step.type === "two_fields" && (
             <form ref={formRef} onSubmit={(e) => { e.preventDefault(); handleTwoFields(); }} className="flex flex-col gap-4">
-              {step.fields?.map((f) => (
-                <input
-                  key={f.name}
-                  name={f.name}
-                  type={f.type || "text"}
-                  placeholder={f.placeholder}
-                  required
-                  className="w-full px-4 py-3 rounded-xl border-2 border-zinc-200 bg-white text-sm text-zinc-700 focus:border-[#263A2D] outline-none transition-colors"
-                />
-              ))}
+              {step.id === "location" ? (
+                <LocationPicker onChange={setLocation} />
+              ) : (
+                step.fields?.map((f) => (
+                  <input
+                    key={f.name}
+                    name={f.name}
+                    type={f.type || "text"}
+                    placeholder={f.placeholder}
+                    required
+                    className="w-full px-4 py-3 rounded-xl border-2 border-zinc-200 bg-white text-sm text-zinc-700 focus:border-[#263A2D] outline-none transition-colors"
+                  />
+                ))
+              )}
               <button
                 type="submit"
-                className="flex items-center justify-center gap-2 px-6 py-3 rounded-full bg-[#263A2D] text-white text-sm font-bold uppercase tracking-wider shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all mt-2"
+                disabled={step.id === "location" && (!location.estado || !location.municipio)}
+                className="flex items-center justify-center gap-2 px-6 py-3 rounded-full bg-[#263A2D] text-white text-sm font-bold uppercase tracking-wider shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all mt-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:translate-x-0 disabled:translate-y-0 disabled:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]"
               >
                 Continuar <ChevronRight size={14} />
               </button>
@@ -260,6 +294,7 @@ export default function Quiz() {
           )}
         </motion.div>
       </AnimatePresence>
+      </div>
 
       {/* Back button */}
       {stepIndex > 0 && !done && (

@@ -9,40 +9,32 @@ const TEMP_LABEL: Record<string, string> = {
   cold: "Frio",
 };
 
-const STATUS_LABEL: Record<string, string> = {
-  hot: "Agendado",
-  warm: "Em qualificação",
-  cold: "Nutrição",
-};
-
-const PRIORITY_LABEL: Record<string, string> = {
-  hot: "Alta",
-  warm: "Média",
-  cold: "Baixa",
-};
+// Quiz envia label completo ("Sim, já cultivo"); board usa SIM/NÃO.
+const simNao = (v: unknown): string =>
+  /^sim/i.test(String(v ?? "")) ? "SIM" : "NÃO";
 
 async function sendToMonday(data: Record<string, unknown>) {
   if (!MONDAY_API_KEY || !MONDAY_BOARD_ID) return;
 
   const temp = (data.temperatura as string) ?? "cold";
   const columnValues = JSON.stringify({
-    text: data.whatsapp,
-    email: { email: data.email, text: data.email },
-    location: `${data.municipio}, ${data.estado}`,
-    status: { label: STATUS_LABEL[temp] ?? "Nutrição" },
-    priority: { label: PRIORITY_LABEL[temp] ?? "Baixa" },
-    numbers: String(data.score ?? 0),
-    text1: data.profissao,
-    text2: data.faixaRenda,
-    text3: data.motivacao,
-    text4: data.horarioReuniao || "Não agendou",
-    text5: TEMP_LABEL[temp] ?? "Frio",
-    text6: data.observacoes,
-    text7: "Site Quiz",
-    text8: data.utmSource ?? "",
-    text9: data.utmMedium ?? "",
-    text10: data.utmCampaign ?? "",
-    checkbox: data.lgpd ? "true" : "false",
+    lead_phone: { phone: String(data.whatsapp ?? ""), countryShortName: "BR" },
+    lead_email: { email: data.email, text: data.email },
+    color_mm3zyy6b: { label: simNao(data.consultaMedica) },
+    color_mm3zm5hf: { label: simNao(data.cultiva) },
+    text_mm3ztqp7: data.profissao,
+    color_mm3vgndh: { label: "SITE" },
+    text_mm4gty3h: data.municipio,
+    text_mm4g4jgx: data.estado,
+    long_text_mm4gnqgq: { text: String(data.motivacao ?? "") },
+    text_mm4gj9hk: data.horarioReuniao || "Não agendou",
+    numeric_mm4gpvsr: String(data.score ?? 0),
+    color_mm4g9k7z: { label: TEMP_LABEL[temp] ?? "Frio" },
+    long_text_mm4gegbq: { text: String(data.observacoes ?? "") },
+    text_mm4gg8hq: data.utmSource ?? "",
+    text_mm4gaw1s: data.utmMedium ?? "",
+    text_mm4gvtdt: data.utmCampaign ?? "",
+    boolean_mm4g3cf0: { checked: data.lgpd ? "true" : "false" },
   });
 
   const mutation = `
@@ -50,12 +42,13 @@ async function sendToMonday(data: Record<string, unknown>) {
       create_item(
         board_id: ${MONDAY_BOARD_ID},
         item_name: "${(data.nome as string).replace(/"/g, "'")}",
-        column_values: ${JSON.stringify(columnValues)}
+        column_values: ${JSON.stringify(columnValues)},
+        create_labels_if_missing: true
       ) { id }
     }
   `;
 
-  await fetch("https://api.monday.com/v2", {
+  const res = await fetch("https://api.monday.com/v2", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -63,6 +56,11 @@ async function sendToMonday(data: Record<string, unknown>) {
     },
     body: JSON.stringify({ query: mutation }),
   });
+
+  const json = await res.json();
+  if (json.errors || json.error_message) {
+    console.error("Monday API error:", JSON.stringify(json.errors ?? json));
+  }
 }
 
 export async function POST(req: NextRequest) {
