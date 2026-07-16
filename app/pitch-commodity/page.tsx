@@ -160,7 +160,7 @@ function Greeting() {
                     </h1>
                     <p className="mt-2 max-w-2xl text-sm leading-relaxed text-white/70">
                         Preparamos este material exclusivo para você. Um panorama completo
-                        da tese de investimento da COMMODITY CBD — empresa-ponte entre
+                        da tese de investimento da NNX — empresa-ponte entre
                         fazendas autorizadas e a indústria farmacêutica.
                     </p>
                 </motion.div>
@@ -214,7 +214,7 @@ function Hero() {
             <div className="relative mx-auto max-w-6xl">
                 <Kicker>Investor Overview · Julho 2026</Kicker>
                 <h1 className="mt-6 text-4xl font-black tracking-tight text-white sm:text-6xl">
-                    COMMODITY CBD
+                    NNX
                 </h1>
                 <p className="mt-3 max-w-2xl text-base text-white/80 sm:text-lg">
                     Empresa-ponte entre fazendas autorizadas e indústrias farmacêuticas.
@@ -230,7 +230,7 @@ function Hero() {
                     <ChainNode title="Fazendas" desc="capacidade produtiva" />
                     <ArrowRight className="mx-auto h-5 w-5 rotate-90 sm:mx-0 sm:rotate-0" style={{ color: GOLD }} />
                     <ChainNode
-                        title="COMMODITY CBD"
+                        title="NNX"
                         desc="ponte comercial + compliance"
                         strong
                     />
@@ -256,7 +256,7 @@ function Thesis() {
         'Regulação abriu a possibilidade de cultivo medicinal por pessoas jurídicas, sob AE, inspeção prévia, rastreabilidade e controle.',
         'A indústria precisa de insumos padronizados, com documentação técnica e fornecedores auditáveis.',
         'As fazendas precisam de LOIs, offtakes e contratos futuros para sustentar a estimativa produtiva.',
-        'A COMMODITY CBD atua como ponte: origina demanda, estrutura documentos e reduz fricção regulatória.',
+        'A NNX atua como ponte: origina demanda, estrutura documentos e reduz fricção regulatória.',
     ];
     return (
         <section className="px-5 py-14 sm:px-6 sm:py-20">
@@ -458,7 +458,7 @@ function Problem() {
 function Solution() {
     const chain = [
         { title: 'Fazendas', desc: 'setup produtivo · 3 t / semestre' },
-        { title: 'COMMODITY CBD', desc: 'originação + contratos + dados', strong: true },
+        { title: 'NNX', desc: 'originação + contratos + dados', strong: true },
         { title: 'Extrator / IFA', desc: 'processamento e qualidade' },
         { title: 'Farmacêuticas', desc: 'produtos regularizados' },
         { title: 'Magistral', desc: 'demanda futura via CBD IFA' },
@@ -477,7 +477,7 @@ function Solution() {
                 <Reveal>
                     <SectionHeading
                         title="A solução: uma plataforma B2B de originação e offtake"
-                        subtitle="A COMMODITY CBD atua como comercializadora estratégica e PMO regulatório-comercial: encontra compradores, qualifica a demanda, estrutura documentos e organiza a cadeia."
+                        subtitle="A NNX atua como comercializadora estratégica e PMO regulatório-comercial: encontra compradores, qualifica a demanda, estrutura documentos e organiza a cadeia."
                     />
                 </Reveal>
 
@@ -856,7 +856,7 @@ function Economics() {
                         <ul className="space-y-2 text-sm text-neutral-700">
                             <li>• Preço-base hipotético de referência: R$ 850 mil por tonelada de biomassa qualificada.</li>
                             <li>• GMV = valor bruto anual da produção potencialmente negociada; não é receita líquida da empresa.</li>
-                            <li>• Receita da COMMODITY CBD: taxa de originação, spread comercial, success fee, retainer de PMO e participação em setups selecionados.</li>
+                            <li>• Receita da NNX: taxa de originação, spread comercial, success fee, retainer de PMO e participação em setups selecionados.</li>
                         </ul>
                     </div>
                 </Reveal>
@@ -1013,8 +1013,7 @@ function Differentiators() {
                         className="flex h-28 w-28 flex-col items-center justify-center rounded-full text-center"
                         style={{ background: GREEN }}
                     >
-                        <span className="text-sm font-bold text-white">COMMODITY</span>
-                        <span className="text-sm font-bold text-white">CBD</span>
+                        <span className="text-xl font-black text-white">NNX</span>
                         <span className="text-[10px] text-white/60">hub B2B</span>
                     </div>
                 </div>
@@ -1390,7 +1389,7 @@ function Footer() {
     return (
         <footer className="px-6 py-8" style={{ background: GREEN_DEEP }}>
             <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-2 text-center sm:flex-row sm:text-left">
-                <p className="text-sm font-bold text-white">COMMODITY CBD</p>
+                <p className="text-sm font-bold text-white">NNX</p>
                 <p className="text-[11px] text-white/50">
                     Documento ilustrativo para discussão com investidor · Uso interno /
                     pre-NDA · Julho 2026
