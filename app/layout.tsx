@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Plus_Jakarta_Sans, Geist_Mono, Lexend } from "next/font/google";
 import "./globals.css";
 import { LawFirmJsonLd } from "@/components/JsonLd";
+import { CapturaAtribuicao } from "@/components/Atribuicao";
 
 const plusJakarta = Plus_Jakarta_Sans({
   variable: "--font-sans",
@@ -76,6 +77,7 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col bg-[#041510] text-zinc-100">
         <LawFirmJsonLd />
+        <CapturaAtribuicao />
         {children}
       </body>
     </html>

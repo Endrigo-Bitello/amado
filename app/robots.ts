@@ -6,7 +6,7 @@ export default function robots(): MetadataRoute.Robots {
       {
         userAgent: "*",
         allow: "/",
-        disallow: ["/api/", "/_next/"],
+        disallow: ["/api/", "/_next/", "/crm", "/crm/", "/enviar-documentos"],
       },
     ],
     sitemap: "https://amadoeamadojr.com.br/sitemap.xml",
