@@ -60,3 +60,105 @@ body {
   height: 1px;
   width: 100%;
 }
+
+/* =============================================================================
+   CRM (/crm) — tokens derivados da identidade do site (verde #263A2D,
+   folha #3D7B3E, dourado #C5A880, areia #FAF8F5, bordas e sombras deslocadas).
+   ========================================================================== */
+@theme {
+  --color-crm-fundo: #FAF8F5;
+  --color-crm-superficie: #FFFFFF;
+  --color-crm-suave: #F3F0EA;
+  --color-crm-suave-2: #ECE7DE;
+  --color-crm-linha: #E4DED3;
+  --color-crm-linha-forte: #CFC7B8;
+  --color-crm-tinta: #1D2A21;
+  --color-crm-tinta-2: #4F5A52;
+  --color-crm-tinta-3: #6B746D;
+  --color-crm-verde: #263A2D;
+  --color-crm-verde-escuro: #1C2E22;
+  --color-crm-musgo: #285E31;
+  --color-crm-folha: #3D7B3E;
+  --color-crm-verde-claro: #EEF4EF;
+  --color-crm-verde-borda: #C9DCCD;
+  --color-crm-ouro: #C5A880;
+  --color-crm-ouro-claro: #F4EAD4;
+  --color-crm-ouro-escuro: #8A6D40;
+  --color-crm-lima: #C7E950;
+  --color-crm-perigo: #B42318;
+  --color-crm-perigo-claro: #FDECEA;
+  --color-crm-alerta: #A15C07;
+  --color-crm-alerta-claro: #FFF4E0;
+  --color-crm-info: #2B5A8A;
+  --color-crm-info-claro: #EAF2FA;
+  --color-crm-sucesso: #2E6B33;
+  --color-crm-sucesso-claro: #E9F4EA;
+  --shadow-crm-bruto: 2px 2px 0 0 #1D2A21;
+  --shadow-crm-bruto-verde: 3px 3px 0 0 #263A2D;
+  --shadow-crm-cartao: 0 1px 2px rgba(29, 42, 33, 0.06), 0 1px 1px rgba(29, 42, 33, 0.04);
+  --shadow-crm-flutuante: 0 16px 40px -12px rgba(29, 42, 33, 0.28), 0 2px 8px rgba(29, 42, 33, 0.08);
+}
+
+.crm-root {
+  --crm-destaque: #263A2D;
+  --crm-destaque-hover: #1C2E22;
+  --crm-linha-altura: 40px;
+  background-color: var(--color-crm-fundo);
+  color: var(--color-crm-tinta);
+  font-family: var(--font-sans);
+}
+
+.crm-root[data-densidade="compacta"] {
+  --crm-linha-altura: 32px;
+}
+
+.crm-root ::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+.crm-root ::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.crm-root ::-webkit-scrollbar-thumb {
+  background: #d6cfc2;
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+
+.crm-root ::-webkit-scrollbar-thumb:hover {
+  background: #b9b09f;
+  background-clip: content-box;
+}
+
+.crm-root :focus-visible {
+  outline: 2px solid #3d7b3e;
+  outline-offset: 2px;
+}
+
+@keyframes crm-entrar {
+  from { transform: translateX(24px); opacity: 0.6; }
+  to { transform: none; opacity: 1; }
+}
+
+@keyframes crm-brilho {
+  0% { background-position: -400px 0; }
+  100% { background-position: 400px 0; }
+}
+
+.crm-esqueleto {
+  background: linear-gradient(90deg, #efebe3 0px, #f7f4ee 80px, #efebe3 160px);
+  background-size: 800px 100%;
+  animation: crm-brilho 1.4s linear infinite;
+  border-radius: 6px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .crm-esqueleto { animation: none; }
+  .crm-root *, .crm-root *::before, .crm-root *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
+}
