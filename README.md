@@ -1,5 +1,7 @@
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
+> **CRM jurídico (`/crm`)** — arquitetura, variáveis de ambiente, implantação (Supabase + Vercel), testes e manutenção: veja [`docs/CRM.md`](docs/CRM.md).
+
 ## Getting Started
 
 First, run the development server:
