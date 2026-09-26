@@ -8,25 +8,48 @@
 // Para automação, pode ser passada pela variável CRM_ADMIN_SENHA.
 
 import { createClient } from "@supabase/supabase-js";
-import readline from "node:readline";
 
 function argumento(nome) {
   const i = process.argv.indexOf(`--${nome}`);
   return i >= 0 ? process.argv[i + 1] : undefined;
 }
 
+// Lê a senha em modo raw: nada é ecoado, o prompt continua visível e Ctrl+C/Ctrl+D cancelam.
 function perguntarSenha(pergunta) {
-  return new Promise((resolve) => {
-    const rl = readline.createInterface({ input: process.stdin, output: process.stdout, terminal: true });
+  return new Promise((resolve, reject) => {
+    const entrada = process.stdin;
+    if (!entrada.isTTY) {
+      reject(new Error("Terminal não interativo: defina a senha pela variável CRM_ADMIN_SENHA."));
+      return;
+    }
     process.stdout.write(pergunta);
-    const escrever = rl._writeToOutput;
-    rl._writeToOutput = () => {};
-    rl.question("", (resposta) => {
-      rl._writeToOutput = escrever;
-      rl.close();
+    entrada.setRawMode(true);
+    entrada.setEncoding("utf8");
+    entrada.resume();
+    let senha = "";
+    const encerrar = () => {
+      entrada.off("data", aoDigitar);
+      entrada.setRawMode(false);
+      entrada.pause();
       process.stdout.write("\n");
-      resolve(resposta);
-    });
+    };
+    function aoDigitar(dados) {
+      for (const c of dados) {
+        if (c === "\r" || c === "\n") {
+          encerrar();
+          resolve(senha);
+          return;
+        }
+        if (c === "\u0003" || c === "\u0004") {
+          encerrar();
+          reject(new Error("Cancelado."));
+          return;
+        }
+        if (c === "\u007f" || c === "\b") senha = senha.slice(0, -1);
+        else if (c >= " ") senha += c;
+      }
+    }
+    entrada.on("data", aoDigitar);
   });
 }
 
@@ -98,4 +121,7 @@ async function principal() {
 }
 
 // Encerra pelo código de saída (sem process.exit, que interrompe conexões pendentes).
-process.exitCode = await principal();
+process.exitCode = await principal().catch((erro) => {
+  console.error(erro.message);
+  return 1;
+});
