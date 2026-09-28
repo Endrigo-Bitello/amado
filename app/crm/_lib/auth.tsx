@@ -18,6 +18,8 @@ interface ContextoAuth {
   pode: (permissao: string) => boolean;
   /** Modo simplificado: menu e painel reduzidos e nenhuma ação de exclusão. */
   simplificado: boolean;
+  /** Conta de desenvolvimento: pode excluir tudo e alterar sem as regras de negócio. */
+  desenvolvedor: boolean;
   sair: () => Promise<void>;
   recarregar: () => void;
 }
@@ -109,6 +111,7 @@ export function ProvedorAuth({ children }: { children: ReactNode }) {
       perfil: sessao.estado === "ativo" ? sessao.perfil : null,
       pode,
       simplificado: sessao.estado === "ativo" && Boolean(sessao.perfil.modo_simplificado),
+      desenvolvedor: sessao.estado === "ativo" && Boolean(sessao.perfil.desenvolvedor),
       sair,
       recarregar: () => perfilConsulta.refetch(),
     }),

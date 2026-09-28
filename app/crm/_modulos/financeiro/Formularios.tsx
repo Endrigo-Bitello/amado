@@ -7,12 +7,14 @@ import { aviso } from "../../_lib/avisos";
 import { opcoesLista } from "../../_lib/colunas";
 import { useConfig } from "../../_lib/config";
 import { formatarData, hojeSP, somarDias, somarMeses } from "../../_lib/datas";
-import { mensagemErro, useGravacao } from "../../_lib/dados";
+import { executar, mensagemErro, useGravacao } from "../../_lib/dados";
+import { excluirComoDev, type TipoExclusaoDev } from "../../_lib/dev";
 import { formatarMoeda } from "../../_lib/formatos";
+import { supabase } from "../../_lib/supabase";
 import type { CobrancaSituacao } from "../../_lib/tipos";
 import { Botao } from "../../_ui/Botao";
 import { AreaTexto, CaixaSelecao, Entrada, EntradaMoeda, GrupoCampo, Selecao } from "../../_ui/Campos";
-import { confirmar } from "../../_ui/Dialogos";
+import { confirmar, confirmarSimples } from "../../_ui/Dialogos";
 import { SeletorCampo } from "../../_ui/Seletores";
 import { Modal } from "../../_ui/Sobreposicoes";
 import { acaoFinanceira, CATEGORIAS_COBRANCA, enviarComprovante } from "./comum";
@@ -235,6 +237,7 @@ export function FormContrato({ aberto, aoFechar, cliente, casos, casoInicial }: 
 // ---------------------------------------------------------------------------
 
 export function FormPagamento({ cobranca, aoFechar }: { cobranca: CobrancaSituacao | null; aoFechar: () => void }) {
+  const { desenvolvedor } = useAuth();
   const config = useConfig();
   const invalidar = useInvalidarFinanceiro();
   const [valor, setValor] = useState<number | null>(null);
@@ -258,7 +261,7 @@ export function FormPagamento({ cobranca, aoFechar }: { cobranca: CobrancaSituac
   const saldo = Number(cobranca.saldo);
   const salvar = async () => {
     if (!valor || valor <= 0) return setErro("Informe um valor maior que zero.");
-    if (valor > saldo + 0.001) return setErro(`O valor excede o saldo em aberto (${formatarMoeda(saldo)}).`);
+    if (valor > saldo + 0.001 && !desenvolvedor) return setErro(`O valor excede o saldo em aberto (${formatarMoeda(saldo)}).`);
     setSalvando(true);
     setErro(null);
     try {
@@ -301,7 +304,7 @@ export function FormPagamento({ cobranca, aoFechar }: { cobranca: CobrancaSituac
         <GrupoCampo rotulo="Valor recebido" obrigatorio ajuda="Valor menor que o saldo registra pagamento parcial.">
           {(p) => <EntradaMoeda {...p} valor={valor} aoAlterar={setValor} data-autofoco />}
         </GrupoCampo>
-        <GrupoCampo rotulo="Data do pagamento" obrigatorio>{(p) => <Entrada {...p} type="date" max={hojeSP()} value={data} onChange={(e) => setData(e.target.value)} />}</GrupoCampo>
+        <GrupoCampo rotulo="Data do pagamento" obrigatorio>{(p) => <Entrada {...p} type="date" max={desenvolvedor ? undefined : hojeSP()} value={data} onChange={(e) => setData(e.target.value)} />}</GrupoCampo>
         <GrupoCampo rotulo="Forma de pagamento">
           {(p) => <SeletorCampo {...p} rotulo="Forma" valor={forma} opcoes={opcoesLista(config, "forma_pagamento").filter((o) => !o.desabilitada)} aoAlterar={setForma} permitirVazio={false} />}
         </GrupoCampo>
@@ -445,6 +448,7 @@ export function FormNovaCobranca({ aberto, aoFechar, cliente, casos, contratoId 
 // ---------------------------------------------------------------------------
 
 export function FormReembolso({ cobranca, aoFechar }: { cobranca: CobrancaSituacao | null; aoFechar: () => void }) {
+  const { desenvolvedor } = useAuth();
   const config = useConfig();
   const invalidar = useInvalidarFinanceiro();
   const [valor, setValor] = useState<number | null>(null);
@@ -467,8 +471,8 @@ export function FormReembolso({ cobranca, aoFechar }: { cobranca: CobrancaSituac
   const disponivel = Number(cobranca.valor_pago) - Number(cobranca.valor_reembolsado);
   const salvar = async () => {
     if (!valor || valor <= 0) return setErro("Informe o valor.");
-    if (valor > disponivel + 0.001) return setErro(`O reembolso não pode superar ${formatarMoeda(disponivel)}.`);
-    if (motivo.trim().length < 3) return setErro("Informe o motivo do reembolso.");
+    if (valor > disponivel + 0.001 && !desenvolvedor) return setErro(`O reembolso não pode superar ${formatarMoeda(disponivel)}.`);
+    if (motivo.trim().length < 3 && !desenvolvedor) return setErro("Informe o motivo do reembolso.");
     setSalvando(true);
     try {
       let arquivoId: string | null = null;
@@ -609,9 +613,10 @@ export function FormDespesa({ aberto, aoFechar, cliente, casos, casoInicial }: {
 // ---------------------------------------------------------------------------
 
 export function useAcoesFinanceiras() {
+  const { desenvolvedor } = useAuth();
   const invalidar = useInvalidarFinanceiro();
   const comMotivo = async (titulo: string, mensagem: string, acao: string, dados: Record<string, unknown>, sucesso: string) => {
-    const r = await confirmar({ titulo, mensagem, motivo: { rotulo: "Motivo", obrigatorio: true }, confirmar: "Confirmar", perigo: true });
+    const r = await confirmar({ titulo, mensagem, motivo: { rotulo: "Motivo", obrigatorio: !desenvolvedor }, confirmar: "Confirmar", perigo: true });
     if (!r.confirmado) return;
     try {
       await acaoFinanceira(acao, { ...dados, motivo: r.motivo });
@@ -621,9 +626,37 @@ export function useAcoesFinanceiras() {
       aviso.erro(mensagemErro(e));
     }
   };
+  // Conta de desenvolvimento: desfazer cancelamentos e estornos e excluir lançamentos.
+  const desfazer = async (tabela: "cobrancas" | "pagamentos" | "despesas", id: string, dados: Record<string, null>, sucesso: string) => {
+    try {
+      await executar(supabase().from(tabela).update(dados as never).eq("id", id).select("id"));
+      aviso.sucesso(sucesso);
+      invalidar();
+    } catch (e) {
+      aviso.erro(mensagemErro(e));
+    }
+  };
+  const excluir = async (tipo: TipoExclusaoDev, id: string, titulo: string, mensagem: string) => {
+    if (!(await confirmarSimples({ titulo, mensagem: `${mensagem} Esta ação não pode ser desfeita.`, confirmar: "Excluir definitivamente", perigo: true }))) return;
+    try {
+      await excluirComoDev(tipo, id);
+      aviso.sucesso("Lançamento excluído.");
+      invalidar();
+    } catch (e) {
+      aviso.erro(mensagemErro(e));
+    }
+  };
   return {
     cancelarCobranca: (c: CobrancaSituacao) => comMotivo("Cancelar cobrança?", `“${c.descricao}” deixará de ser considerada a receber. Cobranças com pagamentos precisam de estorno ou reembolso antes.`, "cancelar_cobranca", { id: c.id }, "Cobrança cancelada."),
     estornarPagamento: (id: string) => comMotivo("Estornar pagamento?", "Use para corrigir um lançamento indevido. O valor deixa de contar como recebido; o registro permanece no histórico.", "estornar_pagamento", { id }, "Pagamento estornado."),
     cancelarDespesa: (id: string) => comMotivo("Cancelar custas/despesa?", "O lançamento fica registrado como cancelado. A cobrança de reembolso vinculada (se houver e sem pagamentos) também é cancelada.", "cancelar_despesa", { id }, "Lançamento cancelado."),
+    reabrirCobranca: (id: string) => desfazer("cobrancas", id, { cancelada_em: null, cancelada_por: null, motivo_cancelamento: null }, "Cobrança reaberta."),
+    desfazerEstorno: (id: string) => desfazer("pagamentos", id, { estornado_em: null, estornado_por: null, motivo_estorno: null }, "Estorno desfeito."),
+    reativarDespesa: (id: string) => desfazer("despesas", id, { cancelada_em: null, cancelada_por: null, motivo_cancelamento: null }, "Lançamento reativado."),
+    excluirContrato: (id: string, descricao: string) => excluir("contrato", id, `Excluir o contrato “${descricao}”?`, "O contrato, todas as parcelas e os pagamentos e reembolsos delas serão apagados."),
+    excluirCobranca: (c: CobrancaSituacao) => excluir("cobranca", c.id!, `Excluir a cobrança “${c.descricao}”?`, "A cobrança e os pagamentos e reembolsos dela serão apagados."),
+    excluirPagamento: (id: string) => excluir("pagamento", id, "Excluir o pagamento?", "O pagamento deixa de existir, inclusive no histórico."),
+    excluirReembolso: (id: string) => excluir("reembolso", id, "Excluir o reembolso?", "O reembolso deixa de existir, inclusive no histórico."),
+    excluirDespesa: (id: string) => excluir("despesa", id, "Excluir as custas/despesa?", "O lançamento deixa de existir. A cobrança de reembolso vinculada, se houver, continua e pode ser excluída à parte."),
   };
 }

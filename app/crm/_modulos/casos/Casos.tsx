@@ -501,7 +501,7 @@ const SELECT_PRAZOS = "*, caso:casos(id, titulo, codigo, cliente_id, cliente:cli
 
 function QuadroPrazos() {
   const config = useConfig();
-  const { pode } = useAuth();
+  const { pode, desenvolvedor } = useAuth();
   const { parametro, definirParametros } = useRota();
   const { atualizar, invalidar } = useGravacao();
   const { preset, ctx, limpar } = usePresetAtivo(["prazos"]);
@@ -539,14 +539,14 @@ function QuadroPrazos() {
       const r = await confirmar({
         titulo: status === "cancelado" ? "Cancelar prazo?" : "Reabrir prazo?",
         mensagem: `“${p.titulo}”. Informe o motivo; ele fica registrado no histórico do prazo.`,
-        motivo: { rotulo: "Motivo", obrigatorio: true },
+        motivo: { rotulo: "Motivo", obrigatorio: !desenvolvedor },
         confirmar: "Confirmar",
         perigo: status === "cancelado",
       });
       if (!r.confirmado) return;
       await salvar(p, { status, motivo_alteracao: r.motivo }).catch(() => undefined);
     },
-    [pode, salvar],
+    [pode, desenvolvedor, salvar],
   );
 
   const colunas = useMemo<ColunaQuadro<PrazoComRelacoes>[]>(

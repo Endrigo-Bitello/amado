@@ -346,7 +346,7 @@ function NovoRapido() {
 }
 
 function MenuUsuario() {
-  const { perfil, sair } = useAuth();
+  const { perfil, sair, desenvolvedor } = useAuth();
   const [senhaAberta, setSenhaAberta] = useState(false);
   if (!perfil) return null;
   return (
@@ -354,7 +354,7 @@ function MenuUsuario() {
       <Menu
         rotulo="Conta"
         itens={[
-          { rotulo: `${perfil.nome} · ${perfil.perfil_nome}`, icone: <CircleUserRound size={15} />, aoSelecionar: () => undefined, desabilitado: true },
+          { rotulo: `${perfil.nome} · ${desenvolvedor ? "Desenvolvimento" : perfil.perfil_nome}`, icone: <CircleUserRound size={15} />, aoSelecionar: () => undefined, desabilitado: true },
           { rotulo: "Alterar minha senha", icone: <KeyRound size={15} />, aoSelecionar: () => setSenhaAberta(true), separadorAntes: true },
           { rotulo: "Sair", icone: <LogOut size={15} />, aoSelecionar: sair, perigo: true },
         ]}

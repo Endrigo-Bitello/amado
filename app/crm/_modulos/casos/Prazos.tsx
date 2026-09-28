@@ -1,7 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { AlertTriangle, Calculator, CheckCircle2, ClipboardCheck, Gavel, History, Paperclip, Pencil, ShieldAlert, ShieldCheck, XCircle } from "lucide-react";
+import { AlertTriangle, Calculator, CheckCircle2, ClipboardCheck, Gavel, History, Paperclip, Pencil, ShieldAlert, ShieldCheck, Trash2, XCircle } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useAuth } from "../../_lib/auth";
 import { aviso, comSalvamento } from "../../_lib/avisos";
@@ -14,7 +14,7 @@ import { supabase } from "../../_lib/supabase";
 import type { Feriado, Prazo, PrazoHistorico, Processo } from "../../_lib/tipos";
 import { Botao } from "../../_ui/Botao";
 import { AreaTexto, CaixaSelecao, Entrada, GrupoCampo, Selecao } from "../../_ui/Campos";
-import { confirmar } from "../../_ui/Dialogos";
+import { confirmar, confirmarSimples } from "../../_ui/Dialogos";
 import { SeletorCampo } from "../../_ui/Seletores";
 import { Menu, Modal } from "../../_ui/Sobreposicoes";
 import { Carregando, Pilula, Selo, Vazio } from "../../_ui/Visuais";
@@ -35,7 +35,7 @@ export interface SugestaoPrazoForm {
 
 export function FormPrazo({ aberto, aoFechar, caso, prazo, sugestao }: { aberto: boolean; aoFechar: () => void; caso?: { id: string; titulo: string } | null; prazo?: Prazo | null; sugestao?: SugestaoPrazoForm | null }) {
   const config = useConfig();
-  const { perfil, pode } = useAuth();
+  const { perfil, pode, desenvolvedor } = useAuth();
   const { inserir, invalidar } = useGravacao();
   const padroes = config.cfg<{ alertas_padrao?: number[]; hora_padrao?: string; recesso?: { ativo: boolean; inicio: string; fim: string } }>("prazos", {});
   const [registro, setRegistro] = useState<RegistroSelecionado | null>(null);
@@ -113,7 +113,7 @@ export function FormPrazo({ aberto, aoFechar, caso, prazo, sugestao }: { aberto:
     if (!registro) return setErro("Selecione o caso.");
     if (!titulo.trim()) return setErro("Descreva o prazo.");
     if (!data) return setErro("Informe a data de vencimento.");
-    if (prazo && alterouVencimento && motivo.trim().length < 3) return setErro("Informe o motivo da correção do vencimento (fica no histórico).");
+    if (prazo && alterouVencimento && motivo.trim().length < 3 && !desenvolvedor) return setErro("Informe o motivo da correção do vencimento (fica no histórico).");
     const listaAlertas = alertas.split(/[,; ]+/).map((x) => Number(x)).filter((x) => Number.isInteger(x) && x >= 0 && x <= 60);
     const dados: Record<string, unknown> = {
       caso_id: registro.id,
@@ -444,8 +444,8 @@ export function HistoricoPrazo({ prazoId }: { prazoId: string }) {
 
 export function ListaPrazosCaso({ casoId, casoTitulo, destaque }: { casoId: string; casoTitulo: string; destaque?: string | null }) {
   const config = useConfig();
-  const { pode } = useAuth();
-  const { invalidar } = useGravacao();
+  const { pode, desenvolvedor } = useAuth();
+  const { invalidar, excluir } = useGravacao();
   const [novo, setNovo] = useState(false);
   const [editar, setEditar] = useState<Prazo | null>(null);
   const [cumprir, setCumprir] = useState<Prazo | null>(null);
@@ -468,7 +468,7 @@ export function ListaPrazosCaso({ casoId, casoTitulo, destaque }: { casoId: stri
     }
   };
   const alterarStatus = async (p: Prazo, status: "cancelado" | "pendente") => {
-    const r = await confirmar({ titulo: status === "cancelado" ? "Cancelar prazo?" : "Reabrir prazo?", mensagem: "Informe o motivo; ele fica no histórico do prazo.", motivo: { rotulo: "Motivo", obrigatorio: true }, confirmar: "Confirmar", perigo: status === "cancelado" });
+    const r = await confirmar({ titulo: status === "cancelado" ? "Cancelar prazo?" : "Reabrir prazo?", mensagem: "Informe o motivo; ele fica no histórico do prazo.", motivo: { rotulo: "Motivo", obrigatorio: !desenvolvedor }, confirmar: "Confirmar", perigo: status === "cancelado" });
     if (!r.confirmado) return;
     try {
       await comSalvamento(() => executar(supabase().from("prazos").update({ status, motivo_alteracao: r.motivo }).eq("id", p.id).select("id")));
@@ -476,6 +476,10 @@ export function ListaPrazosCaso({ casoId, casoTitulo, destaque }: { casoId: stri
     } catch (e) {
       aviso.erro(mensagemErro(e));
     }
+  };
+  const excluirPrazo = async (p: Prazo) => {
+    if (!(await confirmarSimples({ titulo: "Excluir prazo?", mensagem: `“${p.titulo}” e o histórico dele serão apagados. Esta ação não pode ser desfeita.`, confirmar: "Excluir definitivamente", perigo: true }))) return;
+    await excluir("prazos", p.id, { chaves: ["prazos", "painel", "eventos"], mensagemSucesso: "Prazo excluído." }).catch(() => undefined);
   };
 
   const lista = consulta.data ?? [];
@@ -532,6 +536,7 @@ export function ListaPrazosCaso({ casoId, casoTitulo, destaque }: { casoId: stri
                         { rotulo: "Histórico de alterações", icone: <History size={15} />, aoSelecionar: () => setHistorico(p) },
                         ...(p.status === "pendente" && pode("prazos.editar") ? [{ rotulo: "Cancelar prazo", icone: <XCircle size={15} />, aoSelecionar: () => alterarStatus(p, "cancelado"), perigo: true, separadorAntes: true }] : []),
                         ...(p.status !== "pendente" && pode("prazos.editar") ? [{ rotulo: "Reabrir prazo", icone: <History size={15} />, aoSelecionar: () => alterarStatus(p, "pendente"), separadorAntes: true }] : []),
+                        ...(desenvolvedor ? [{ rotulo: "Excluir prazo", icone: <Trash2 size={15} />, aoSelecionar: () => excluirPrazo(p), perigo: true }] : []),
                       ]}
                       gatilho={(g) => (
                         <button {...g} type="button" className="rounded-lg border border-crm-linha px-2 py-1 text-xs font-semibold hover:bg-crm-suave" aria-label={`Ações do prazo ${p.titulo}`}>

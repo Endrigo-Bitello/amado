@@ -5,7 +5,7 @@
 // Cobre: RLS por perfil, quiz → lead, conversão, casos, checklist, portal do
 // cliente, revisão de documentos, tarefas, prazos (conferência/correção),
 // financeiro (parcial/quitação), importação, campos personalizados,
-// automações (deduplicação), auditoria e modo simplificado.
+// automações (deduplicação), auditoria, modo simplificado e conta de desenvolvimento.
 
 import { test, before } from "node:test";
 import assert from "node:assert/strict";
@@ -447,6 +447,45 @@ test("modo simplificado: cria e edita, mas não exclui (nem com permissão de ex
   assert.equal(desligar.status, 200, JSON.stringify(desligar.corpo));
   assert.ok(ok(await c.rpc("meu_perfil")).permissoes.includes("casos.excluir"), "exceção volta a valer fora do modo");
   assert.equal(ok(await c.from("tarefas").delete().eq("id", tarefa.id).select("id")).length, 1, "fora do modo a exclusão volta a valer");
+});
+
+test("conta de desenvolvimento: exclui em cascata e dispensa as travas", async () => {
+  contas.dev = { email: "dev@amadoeamadojr.com.br", senha: senha() };
+  const r = await funcao("crm-admin", { acao: "criar_usuario", nome: "Desenvolvimento", email: contas.dev.email, senha: contas.dev.senha, perfil_id: "atendimento" }, ctx.admin.token);
+  assert.equal(r.status, 200, JSON.stringify(r.corpo));
+  const dev = await entrar(contas.dev.email, contas.dev.senha);
+  const perfil = ok(await dev.rpc("meu_perfil"));
+  assert.equal(perfil.desenvolvedor, true);
+  assert.ok(perfil.permissoes.includes("clientes.excluir") && perfil.permissoes.includes("financeiro.contratos"), "todas as permissões, apesar do perfil");
+
+  const hoje = new Intl.DateTimeFormat("en-CA", { timeZone: "America/Sao_Paulo" }).format(new Date());
+  const amanha = new Intl.DateTimeFormat("en-CA", { timeZone: "America/Sao_Paulo" }).format(new Date(Date.now() + 2 * 86400_000));
+  const cli = ok(await dev.from("clientes").insert({ nome: "Cliente para excluir" }).select().single());
+  ok(await dev.from("casos").insert({ cliente_id: cli.id, titulo: "Caso para excluir" }).select().single());
+  const ct = await funcao("crm-financeiro", { acao: "criar_contrato", dados: { cliente_id: cli.id, valor_total: 1000, entrada: { valor: 0, data: null }, parcelas: { quantidade: 1, primeiro_vencimento: hoje }, forma_contratacao: "parcelado" } }, dev.token);
+  assert.equal(ct.status, 200, JSON.stringify(ct.corpo));
+  const [parcela] = ok(await dev.from("cobrancas").select("id").eq("contrato_id", ct.corpo.resultado.contrato_id));
+  const futuro = await funcao("crm-financeiro", { acao: "registrar_pagamento", dados: { cobranca_id: parcela.id, valor: 1500, data_pagamento: amanha, forma: "pix" } }, dev.token);
+  assert.equal(futuro.status, 200, "data futura e acima do saldo: " + JSON.stringify(futuro.corpo));
+  const futuroAdmin = await funcao("crm-financeiro", { acao: "registrar_pagamento", dados: { cobranca_id: parcela.id, valor: 1, data_pagamento: amanha, forma: "pix" } }, ctx.admin.token);
+  assert.equal(futuroAdmin.status, 400, "para as demais contas a trava continua");
+
+  const bloqueado = await ctx.admin.from("clientes").delete().eq("id", cli.id);
+  assert.equal(bloqueado.error?.code, "23503", "admin comum esbarra nos vínculos");
+  const negado = await ctx.admin.rpc("dev_excluir", { p_tipo: "cliente", p_id: cli.id });
+  assert.equal(negado.error?.code, "42501", "somente a conta de desenvolvimento");
+  ok(await dev.rpc("dev_excluir", { p_tipo: "cliente", p_id: cli.id }));
+  for (const tabela of ["clientes", "casos", "contratos", "cobrancas", "pagamentos"]) {
+    const coluna = tabela === "clientes" ? "id" : "cliente_id";
+    assert.equal(ok(await servico.from(tabela).select("id").eq(coluna, cli.id)).length, 0, `${tabela} apagados`);
+  }
+
+  const aud = ok(await dev.from("auditoria").select("id").limit(1).single());
+  assert.equal((await ctx.admin.from("auditoria").delete().eq("id", aud.id).select("id")).data?.length ?? 0, 0, "admin comum não apaga auditoria");
+  assert.equal(ok(await dev.from("auditoria").delete().eq("id", aud.id).select("id")).length, 1, "conta de desenvolvimento apaga auditoria");
+  const outra = ok(await servico.from("cobrancas").select("id, cliente_id").limit(1).single());
+  const direto = await ctx.admin.from("pagamentos").insert({ cobranca_id: outra.id, cliente_id: outra.cliente_id, valor: 1, data_pagamento: hoje, registrado_por: ctx.adminId });
+  assert.equal(direto.error?.code, "42501", "escrita direta no financeiro segue bloqueada para as demais contas");
 });
 
 test("usuário desativado perde o acesso imediatamente", async () => {

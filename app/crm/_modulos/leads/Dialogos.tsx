@@ -26,6 +26,7 @@ export function DialogoMotivoPerda({
   aoFechar: () => void;
 }) {
   const config = useConfig();
+  const { desenvolvedor } = useAuth();
   const { atualizar } = useGravacao();
   const [motivo, setMotivo] = useState<string | null>(null);
   const [detalhe, setDetalhe] = useState("");
@@ -37,7 +38,7 @@ export function DialogoMotivoPerda({
   if (!pedido) return null;
   const etapa = config.etapa(pedido.etapaId);
   const salvar = async () => {
-    if (!motivo) return;
+    if (!motivo && !desenvolvedor) return;
     setSalvando(true);
     try {
       await atualizar(
@@ -63,7 +64,7 @@ export function DialogoMotivoPerda({
       rodape={
         <>
           <Botao onClick={aoFechar}>Cancelar</Botao>
-          <Botao variante="primario" onClick={salvar} carregando={salvando} disabled={!motivo}>
+          <Botao variante="primario" onClick={salvar} carregando={salvando} disabled={!motivo && !desenvolvedor}>
             Confirmar
           </Botao>
         </>

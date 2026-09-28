@@ -68,6 +68,8 @@ export interface SessaoPerfil {
   perfil_nome: string;
   /** Menu e painel reduzidos, sem opções de exclusão (ver migração do modo simplificado). */
   modo_simplificado: boolean;
+  /** Conta de desenvolvimento: sem travas de exclusão nem de regras de negócio. */
+  desenvolvedor: boolean;
   permissoes: string[];
 }
 
