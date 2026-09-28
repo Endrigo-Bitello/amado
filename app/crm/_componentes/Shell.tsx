@@ -81,7 +81,7 @@ function gravarPreferencia(chave: string, valor: boolean) {
 }
 
 export function Shell() {
-  const { pode } = useAuth();
+  const { pode, simplificado } = useAuth();
   const config = useConfig();
   const { modulo } = useRota();
   const [recolhida, setRecolhida] = useState(false);
@@ -106,7 +106,7 @@ export function Shell() {
   const destaque = DESTAQUES[aparencia.destaque ?? "floresta"] ?? DESTAQUES.floresta;
   const definicao = MODULOS.find((m) => m.id === modulo);
   const Componente = definicao ? COMPONENTES[definicao.id] : null;
-  const permitido = definicao ? moduloPermitido(definicao, pode) : false;
+  const permitido = definicao ? moduloPermitido(definicao, pode, simplificado) : false;
 
   useEffect(() => {
     const nome = definicao ? config.nome(definicao.chaveNome) : "CRM";
@@ -157,6 +157,16 @@ export function Shell() {
                 </Link>
               }
             />
+          ) : !permitido && simplificado ? (
+            <Vazio
+              titulo="Esta área não está no seu menu"
+              descricao="Use o menu ao lado para abrir clientes, casos, tarefas, agenda ou financeiro."
+              acao={
+                <Link href="/crm" className="text-sm font-semibold text-crm-folha underline">
+                  Voltar para Hoje
+                </Link>
+              }
+            />
           ) : !permitido ? (
             <Vazio
               titulo="Acesso restrito"
@@ -200,10 +210,10 @@ function Marca({ recolhida }: { recolhida: boolean }) {
 }
 
 function BarraLateral({ recolhida, aoAlternar, aoFechar, className = "" }: { recolhida: boolean; aoAlternar?: () => void; aoFechar?: () => void; className?: string }) {
-  const { pode, perfil } = useAuth();
+  const { pode, perfil, simplificado } = useAuth();
   const config = useConfig();
   const { modulo } = useRota();
-  const visiveis = MODULOS.filter((m) => moduloPermitido(m, pode));
+  const visiveis = MODULOS.filter((m) => moduloPermitido(m, pode, simplificado));
   return (
     <aside
       className={`${className} flex-col border-r-2 border-crm-tinta bg-crm-verde text-[#E7EFE9] transition-[width] duration-200 ${recolhida ? "w-[76px]" : "w-64"}`}
@@ -230,12 +240,12 @@ function BarraLateral({ recolhida, aoAlternar, aoFechar, className = "" }: { rec
                   href={m.id === "hoje" ? "/crm" : `/crm/${m.id}`}
                   aria-current={ativo ? "page" : undefined}
                   title={recolhida ? nome : undefined}
-                  className={`group relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold transition-colors ${
+                  className={`group relative flex items-center gap-3 rounded-xl px-3 font-semibold transition-colors ${simplificado ? "py-3 text-base" : "py-2.5 text-sm"} ${
                     ativo ? "bg-crm-ouro-claro/12 text-crm-ouro-claro" : "text-[#C9D6CD] hover:bg-white/6 hover:text-white"
                   } ${recolhida ? "justify-center" : ""}`}
                 >
                   {ativo && <span className="absolute left-0 top-2 bottom-2 w-1 rounded-r bg-crm-ouro" aria-hidden />}
-                  <Icone size={19} className="shrink-0" aria-hidden />
+                  <Icone size={simplificado ? 22 : 19} className="shrink-0" aria-hidden />
                   {!recolhida && <span className="truncate">{nome}</span>}
                   {recolhida && <span className="sr-only">{nome}</span>}
                 </Link>
@@ -313,9 +323,9 @@ function IndicadorSalvamento() {
 }
 
 function NovoRapido() {
-  const { pode } = useAuth();
+  const { pode, simplificado } = useAuth();
   const itens = [
-    pode("leads.editar") && { rotulo: "Lead", icone: <Magnet size={15} />, aoSelecionar: () => navegar("/crm/leads?novo=1") },
+    pode("leads.editar") && !simplificado && { rotulo: "Lead", icone: <Magnet size={15} />, aoSelecionar: () => navegar("/crm/leads?novo=1") },
     pode("clientes.editar") && { rotulo: "Cliente", icone: <UserPlus size={15} />, aoSelecionar: () => navegar("/crm/clientes?novo=1") },
     pode("casos.editar") && { rotulo: "Caso", icone: <Scale size={15} />, aoSelecionar: () => navegar("/crm/casos?novo=1") },
     { rotulo: "Tarefa", icone: <ListChecks size={15} />, aoSelecionar: () => navegar("/crm/tarefas?novo=1") },
@@ -425,6 +435,7 @@ function AlterarSenha({ aberto, aoFechar }: { aberto: boolean; aoFechar: () => v
 }
 
 function BarraSuperior({ aoAbrirMenu }: { aoAbrirMenu: () => void }) {
+  const { simplificado } = useAuth();
   const refBusca = useRef<HTMLButtonElement>(null);
   return (
     <header className="flex h-14 shrink-0 items-center gap-2 border-b border-crm-linha bg-white/90 px-3 backdrop-blur sm:gap-3 sm:px-5">
@@ -439,7 +450,7 @@ function BarraSuperior({ aoAbrirMenu }: { aoAbrirMenu: () => void }) {
         aria-label="Busca global (Ctrl+K)"
       >
         <Search size={16} className="shrink-0" aria-hidden />
-        <span className="truncate">Buscar leads, clientes, casos…</span>
+        <span className="truncate">{simplificado ? "Buscar clientes, casos, tarefas…" : "Buscar leads, clientes, casos…"}</span>
         <span className="ml-auto hidden items-center gap-0.5 md:inline-flex" aria-hidden>
           <Kbd>Ctrl</Kbd>
           <Kbd>K</Kbd>
@@ -456,10 +467,10 @@ function BarraSuperior({ aoAbrirMenu }: { aoAbrirMenu: () => void }) {
 }
 
 function NavegacaoMovel({ aoAbrirMenu }: { aoAbrirMenu: () => void }) {
-  const { pode } = useAuth();
+  const { pode, simplificado } = useAuth();
   const config = useConfig();
   const { modulo } = useRota();
-  const itens = MODULOS.filter((m) => m.movel && moduloPermitido(m, pode)).slice(0, 4);
+  const itens = MODULOS.filter((m) => m.movel && moduloPermitido(m, pode, simplificado)).slice(0, 4);
   return (
     <nav aria-label="Navegação rápida" className="fixed inset-x-0 bottom-0 z-40 border-t-2 border-crm-tinta bg-white lg:hidden">
       <ul className="flex">

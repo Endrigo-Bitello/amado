@@ -30,6 +30,7 @@ interface UsuarioAdmin {
   ativo: boolean;
   permissoes_extra: string[];
   permissoes_negadas: string[];
+  modo_simplificado: boolean;
   ultimo_acesso_em: string | null;
   ultimo_login: string | null;
   bloqueado: boolean;
@@ -153,6 +154,11 @@ export function AdminUsuarios() {
                           {u.permissoes_negadas.length > 0 && `−${u.permissoes_negadas.length} restrição(ões)`}
                         </span>
                       )}
+                      {u.modo_simplificado && (
+                        <span className="mt-1 block">
+                          <Selo tom="ouro">Modo simplificado</Selo>
+                        </span>
+                      )}
                     </td>
                     <td className="px-3 py-2">{u.ativo ? <Selo tom="sucesso" icone={<UserCheck size={11} aria-hidden />}>Ativo</Selo> : <Selo icone={<UserX size={11} aria-hidden />}>Inativo</Selo>}</td>
                     <td className="px-3 py-2 text-xs tabular-nums text-crm-tinta-2">{formatarDataHora(u.ultimo_login ?? u.ultimo_acesso_em) || "Nunca acessou"}</td>
@@ -189,7 +195,7 @@ function FormUsuario({ pedido, aoFechar, aoSalvar }: { pedido: { usuario: Usuari
   const { invalidar } = useGravacao();
   const catalogo = usePermissoesCatalogo();
   const u = pedido?.usuario ?? null;
-  const [f, setF] = useState({ nome: "", email: "", perfil_id: "atendimento", cargo: "", oab: "", telefone: "", cor: "#3D7B3E", senha: "" });
+  const [f, setF] = useState({ nome: "", email: "", perfil_id: "atendimento", cargo: "", oab: "", telefone: "", cor: "#3D7B3E", senha: "", modo_simplificado: false });
   const [extra, setExtra] = useState<string[]>([]);
   const [negadas, setNegadas] = useState<string[]>([]);
   const [salvando, setSalvando] = useState(false);
@@ -198,7 +204,7 @@ function FormUsuario({ pedido, aoFechar, aoSalvar }: { pedido: { usuario: Usuari
   useEffect(() => {
     if (!pedido) return;
     setErro(null);
-    setF({ nome: u?.nome ?? "", email: u?.email ?? "", perfil_id: u?.perfil_id ?? "atendimento", cargo: u?.cargo ?? "", oab: u?.oab ?? "", telefone: u?.telefone ?? "", cor: u?.cor ?? "#3D7B3E", senha: u ? "" : gerarSenha() });
+    setF({ nome: u?.nome ?? "", email: u?.email ?? "", perfil_id: u?.perfil_id ?? "atendimento", cargo: u?.cargo ?? "", oab: u?.oab ?? "", telefone: u?.telefone ?? "", cor: u?.cor ?? "#3D7B3E", senha: u ? "" : gerarSenha(), modo_simplificado: u?.modo_simplificado ?? false });
     setExtra(u?.permissoes_extra ?? []);
     setNegadas(u?.permissoes_negadas ?? []);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -212,10 +218,10 @@ function FormUsuario({ pedido, aoFechar, aoSalvar }: { pedido: { usuario: Usuari
     setErro(null);
     try {
       if (u) {
-        await chamarFuncao("crm-admin", { acao: "atualizar_usuario", id: u.id, nome: f.nome, email: f.email, perfil_id: f.perfil_id, cargo: f.cargo, oab: f.oab, telefone: f.telefone, cor: f.cor, permissoes_extra: extra, permissoes_negadas: negadas });
+        await chamarFuncao("crm-admin", { acao: "atualizar_usuario", id: u.id, nome: f.nome, email: f.email, perfil_id: f.perfil_id, cargo: f.cargo, oab: f.oab, telefone: f.telefone, cor: f.cor, permissoes_extra: extra, permissoes_negadas: negadas, modo_simplificado: f.modo_simplificado });
         aviso.sucesso("Usuário atualizado.");
       } else {
-        await chamarFuncao("crm-admin", { acao: "criar_usuario", nome: f.nome, email: f.email, senha: f.senha, perfil_id: f.perfil_id, cargo: f.cargo, oab: f.oab, telefone: f.telefone, cor: f.cor, permissoes_extra: extra, permissoes_negadas: negadas });
+        await chamarFuncao("crm-admin", { acao: "criar_usuario", nome: f.nome, email: f.email, senha: f.senha, perfil_id: f.perfil_id, cargo: f.cargo, oab: f.oab, telefone: f.telefone, cor: f.cor, permissoes_extra: extra, permissoes_negadas: negadas, modo_simplificado: f.modo_simplificado });
         aviso.sucesso("Conta criada. Entregue a senha temporária à pessoa por um canal seguro.");
       }
       invalidar("config");
@@ -274,6 +280,13 @@ function FormUsuario({ pedido, aoFechar, aoSalvar }: { pedido: { usuario: Usuari
             <span className="text-[13px] font-semibold text-crm-tinta-2">Cor do avatar</span>
             <SeletorCor valor={f.cor} aoAlterar={(cor) => setF({ ...f, cor })} rotulo="Cor do avatar" />
           </div>
+          <CaixaSelecao
+            className="sm:col-span-2"
+            marcado={f.modo_simplificado}
+            aoAlterar={(v) => setF({ ...f, modo_simplificado: v })}
+            rotulo={<strong>Modo simplificado</strong>}
+            descricao="Menu só com Hoje, Clientes, Casos e processos, Tarefas, Agenda e Financeiro; painel Hoje resumido, com letras maiores; nenhuma opção de excluir. Criar e editar continuam valendo pelo perfil."
+          />
           {!u && (
             <GrupoCampo rotulo="Senha temporária" obrigatorio className="sm:col-span-2" ajuda="Mínimo de 10 caracteres com letras e números. Entregue por canal seguro e peça para a pessoa trocá-la em “Esqueci minha senha” (se o envio de e-mails estiver configurado) ou com o administrador.">
               {(p) => (
@@ -293,6 +306,7 @@ function FormUsuario({ pedido, aoFechar, aoSalvar }: { pedido: { usuario: Usuari
           <p className="text-xs text-crm-tinta-3">
             Vêm do perfil <strong>{perfilSel?.nome}</strong>. Marque ou desmarque para criar exceções apenas para esta pessoa.
             {f.perfil_id === "admin" && " Administradores têm acesso completo."}
+            {f.modo_simplificado && " No modo simplificado, as permissões de exclusão ficam desativadas."}
           </p>
           {catalogo.isLoading ? (
             <Carregando />

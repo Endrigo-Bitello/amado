@@ -26,7 +26,7 @@ type ArquivoMidia = { id: string; bucket: string; caminho: string; nome: string 
 
 /** Vídeos (links ou arquivos) relacionados ao cliente ou caso, com descrição e visibilidade. */
 export function Midias({ clienteId, casoId }: { clienteId?: string | null; casoId?: string | null }) {
-  const { pode } = useAuth();
+  const { pode, simplificado } = useAuth();
   const { excluir } = useGravacao();
   const [novo, setNovo] = useState(false);
   const coluna = casoId ? "caso_id" : "cliente_id";
@@ -60,7 +60,7 @@ export function Midias({ clienteId, casoId }: { clienteId?: string | null; casoI
                   <p className="truncate text-sm font-semibold">{m.titulo}</p>
                   {m.descricao && <p className="text-xs text-crm-tinta-2">{m.descricao}</p>}
                 </div>
-                {(pode("documentos.excluir") || pode("documentos.editar")) && (
+                {!simplificado && (pode("documentos.excluir") || pode("documentos.editar")) && (
                   <button
                     type="button"
                     className="rounded p-1 text-crm-tinta-3 hover:text-crm-perigo"

@@ -37,6 +37,7 @@ interface Pedido {
   ativo?: boolean;
   permissoes_extra?: string[];
   permissoes_negadas?: string[];
+  modo_simplificado?: boolean;
   descricao?: string;
   permissoes?: string[];
 }
@@ -65,7 +66,7 @@ Deno.serve(async (req) => {
       case "listar_usuarios": {
         const { data: perfis, error } = await servico
           .from("usuarios")
-          .select("id, nome, email, perfil_id, cargo, oab, telefone, cor, ativo, permissoes_extra, permissoes_negadas, ultimo_acesso_em, created_at")
+          .select("id, nome, email, perfil_id, cargo, oab, telefone, cor, ativo, permissoes_extra, permissoes_negadas, modo_simplificado, ultimo_acesso_em, created_at")
           .order("nome");
         if (error) return respostaErroBanco(req, error, "crm-admin:listar");
         const contas = new Map<string, { last_sign_in_at?: string | null; banned_until?: string | null }>();
@@ -128,6 +129,7 @@ Deno.serve(async (req) => {
             cor: texto(p.cor, 7),
             permissoes_extra: p.permissoes_extra ?? [],
             permissoes_negadas: p.permissoes_negadas ?? [],
+            modo_simplificado: Boolean(p.modo_simplificado),
             ativo: true,
           },
         });
@@ -160,6 +162,7 @@ Deno.serve(async (req) => {
             cor: p.cor !== undefined ? texto(p.cor, 7) : atual.cor,
             permissoes_extra: p.permissoes_extra ?? atual.permissoes_extra,
             permissoes_negadas: p.permissoes_negadas ?? atual.permissoes_negadas,
+            modo_simplificado: p.modo_simplificado !== undefined ? Boolean(p.modo_simplificado) : atual.modo_simplificado,
             ativo,
           },
         });
