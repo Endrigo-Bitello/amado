@@ -16,6 +16,8 @@ interface ContextoAuth {
   sessao: EstadoAuth;
   perfil: SessaoPerfil | null;
   pode: (permissao: string) => boolean;
+  /** Modo simplificado: menu e painel reduzidos e nenhuma ação de exclusão. */
+  simplificado: boolean;
   sair: () => Promise<void>;
   recarregar: () => void;
 }
@@ -106,6 +108,7 @@ export function ProvedorAuth({ children }: { children: ReactNode }) {
       sessao,
       perfil: sessao.estado === "ativo" ? sessao.perfil : null,
       pode,
+      simplificado: sessao.estado === "ativo" && Boolean(sessao.perfil.modo_simplificado),
       sair,
       recarregar: () => perfilConsulta.refetch(),
     }),

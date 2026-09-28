@@ -126,7 +126,7 @@ interface PropsArquivos {
 }
 
 export function ListaArquivos({ escopo, filtroColuna, tipo, somenteLeitura, titulo = "Arquivos", mostrarVinculo = true }: PropsArquivos) {
-  const { pode } = useAuth();
+  const { pode, simplificado } = useAuth();
   const config = useConfig();
   const { atualizar, invalidar } = useGravacao();
   const [enviando, setEnviando] = useState(0);
@@ -259,6 +259,7 @@ export function ListaArquivos({ escopo, filtroColuna, tipo, somenteLeitura, titu
                 </>
               ) : (
                 !somenteLeitura &&
+                !simplificado &&
                 pode("documentos.editar") && (
                   <Botao tamanho="icone-sm" variante="fantasma" onClick={() => remover(a)} aria-label={`Mover ${a.nome} para a lixeira`}>
                     <Trash2 size={15} />

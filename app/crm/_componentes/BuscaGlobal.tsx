@@ -3,6 +3,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { Archive, CornerDownLeft, ListChecks, Loader2, Magnet, Scale, Search, Users } from "lucide-react";
 import { useEffect, useRef, useState, useSyncExternalStore, type KeyboardEvent } from "react";
+import { useAuth } from "../_lib/auth";
 import { executar } from "../_lib/dados";
 import { navegar } from "../_lib/rotas";
 import { supabase } from "../_lib/supabase";
@@ -39,6 +40,7 @@ const TIPOS = {
 };
 
 export function BuscaGlobal() {
+  const { simplificado } = useAuth();
   const estaAberta = useSyncExternalStore(
     (f) => {
       ouvintes.add(f);
@@ -70,7 +72,8 @@ export function BuscaGlobal() {
     queryFn: async () => (await executar(supabase().rpc("busca_global", { p_termo: atrasado }))) as unknown as Resultado[],
     staleTime: 10_000,
   });
-  const resultados = consulta.data ?? [];
+  // No modo simplificado a área de Leads não faz parte do menu.
+  const resultados = (consulta.data ?? []).filter((r) => !simplificado || r.tipo !== "lead");
 
   const abrir = (r: Resultado) => {
     fechar();

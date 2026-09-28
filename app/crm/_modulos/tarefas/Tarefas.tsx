@@ -152,7 +152,7 @@ export function useColunasTarefas(salvar: (t: TarefaComRelacoes, alt: Record<str
 }
 
 export default function Tarefas() {
-  const { perfil, pode } = useAuth();
+  const { perfil, pode, simplificado } = useAuth();
   const config = useConfig();
   const { parametro, definirParametros } = useRota();
   const { atualizar, inserir, excluir } = useGravacao();
@@ -222,7 +222,7 @@ export default function Tarefas() {
       rotulo: "Excluir",
       icone: <Trash2 size={13} />,
       perigo: true,
-      visivel: pode("tarefas.editar"),
+      visivel: pode("tarefas.editar") && !simplificado,
       executar: async (ts: TarefaComRelacoes[]) => {
         if (!(await confirmarSimples({ titulo: `Excluir ${ts.length} tarefa(s)?`, mensagem: "Checklist, comentários e anexos das tarefas também serão removidos. Prefira arquivar.", confirmar: "Excluir", perigo: true }))) return;
         for (const t of ts) await excluir("tarefas", t.id).catch(() => undefined);
@@ -330,7 +330,7 @@ function LoteTarefas({ pedido, aoFechar }: { pedido: { tipo: "status" | "respons
 }
 
 function PainelTarefa({ tarefa: t, colunas, aoFechar }: { tarefa: TarefaComRelacoes; colunas: ColunaQuadro<TarefaComRelacoes>[]; aoFechar: () => void }) {
-  const { pode, perfil } = useAuth();
+  const { pode, perfil, simplificado } = useAuth();
   const config = useConfig();
   const { atualizar, inserir, excluir } = useGravacao();
   const [aba, setAba] = useState("dados");
@@ -405,7 +405,7 @@ function PainelTarefa({ tarefa: t, colunas, aoFechar }: { tarefa: TarefaComRelac
         ...(podeEditar
           ? [{ rotulo: t.arquivado_em ? "Restaurar" : "Arquivar", icone: t.arquivado_em ? <ArchiveRestore size={15} /> : <Archive size={15} />, aoSelecionar: () => atualizar("tarefas", t.id, { arquivado_em: t.arquivado_em ? null : new Date().toISOString() }, { chaves: ["tarefas"], mensagemSucesso: t.arquivado_em ? "Tarefa restaurada." : "Tarefa arquivada." }).catch(() => undefined) }]
           : []),
-        ...(pode("tarefas.editar") || t.created_by === perfil?.id
+        ...(!simplificado && (pode("tarefas.editar") || t.created_by === perfil?.id)
           ? [{
               rotulo: "Excluir",
               icone: <Trash2 size={15} />,

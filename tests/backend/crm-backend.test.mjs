@@ -5,7 +5,7 @@
 // Cobre: RLS por perfil, quiz → lead, conversão, casos, checklist, portal do
 // cliente, revisão de documentos, tarefas, prazos (conferência/correção),
 // financeiro (parcial/quitação), importação, campos personalizados,
-// automações (deduplicação) e auditoria.
+// automações (deduplicação), auditoria e modo simplificado.
 
 import { test, before } from "node:test";
 import assert from "node:assert/strict";
@@ -419,6 +419,34 @@ test("relatórios e busca global respeitam permissões", async () => {
   assert.ok(busca.some((r) => r.tipo === "cliente"));
   const semRel = await ctx.atendimento.rpc("relatorio_leads", { p: {} });
   assert.ok(semRel.error, "atendimento sem relatorios.ver");
+});
+
+test("modo simplificado: cria e edita, mas não exclui (nem com permissão de exclusão)", async () => {
+  contas.simplificado = { email: "simplificado@teste.local", senha: senha() };
+  const r = await funcao("crm-admin", {
+    acao: "criar_usuario", nome: "Usuário simplificado", email: contas.simplificado.email, senha: contas.simplificado.senha,
+    perfil_id: "advogado", permissoes_extra: ["casos.excluir"], modo_simplificado: true,
+  }, ctx.admin.token);
+  assert.equal(r.status, 200, JSON.stringify(r.corpo));
+  const id = r.corpo.id;
+  const c = await entrar(contas.simplificado.email, contas.simplificado.senha);
+
+  const perfil = ok(await c.rpc("meu_perfil"));
+  assert.equal(perfil.modo_simplificado, true);
+  assert.ok(!perfil.permissoes.some((p) => p.endsWith(".excluir")), "nenhuma permissão de exclusão");
+  assert.ok(perfil.permissoes.includes("casos.editar") && perfil.permissoes.includes("tarefas.editar"));
+
+  const tarefa = ok(await c.from("tarefas").insert({ titulo: "Conferir agenda", caso_id: ctx.caso2, responsavel_id: id }).select().single());
+  ok(await c.from("tarefas").update({ titulo: "Conferir agenda da semana" }).eq("id", tarefa.id));
+  const inicio = new Date(Date.now() + 26 * 3600_000).toISOString();
+  const reuniao = ok(await c.from("compromissos").insert({ tipo: "reuniao", titulo: "Reunião de equipe", inicio, responsavel_id: id }).select().single());
+  assert.equal(ok(await c.from("tarefas").delete().eq("id", tarefa.id).select("id")).length, 0, "tarefa não é excluída");
+  assert.equal(ok(await c.from("compromissos").delete().eq("id", reuniao.id).select("id")).length, 0, "compromisso não é excluído");
+
+  const desligar = await funcao("crm-admin", { acao: "atualizar_usuario", id, modo_simplificado: false }, ctx.admin.token);
+  assert.equal(desligar.status, 200, JSON.stringify(desligar.corpo));
+  assert.ok(ok(await c.rpc("meu_perfil")).permissoes.includes("casos.excluir"), "exceção volta a valer fora do modo");
+  assert.equal(ok(await c.from("tarefas").delete().eq("id", tarefa.id).select("id")).length, 1, "fora do modo a exclusão volta a valer");
 });
 
 test("usuário desativado perde o acesso imediatamente", async () => {

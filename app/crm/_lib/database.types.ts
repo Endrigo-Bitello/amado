@@ -1524,13 +1524,13 @@ isOneToOne: false
                   ]
                 },"usuarios": {
                   Row: {
-                    "ativo": boolean,"cargo": string | null,"cor": string,"created_at": string,"email": string,"id": string,"nome": string,"oab": string | null,"perfil_id": string,"permissoes_extra": (string)[],"permissoes_negadas": (string)[],"telefone": string | null,"ultimo_acesso_em": string | null,"updated_at": string
+                    "ativo": boolean,"cargo": string | null,"cor": string,"created_at": string,"email": string,"id": string,"modo_simplificado": boolean,"nome": string,"oab": string | null,"perfil_id": string,"permissoes_extra": (string)[],"permissoes_negadas": (string)[],"telefone": string | null,"ultimo_acesso_em": string | null,"updated_at": string
                   }
                   Insert: {
-                    "ativo"?: boolean,"cargo"?: string | null,"cor"?: string,"created_at"?: string,"email": string,"id": string,"nome": string,"oab"?: string | null,"perfil_id": string,"permissoes_extra"?: (string)[],"permissoes_negadas"?: (string)[],"telefone"?: string | null,"ultimo_acesso_em"?: string | null,"updated_at"?: string
+                    "ativo"?: boolean,"cargo"?: string | null,"cor"?: string,"created_at"?: string,"email": string,"id": string,"modo_simplificado"?: boolean,"nome": string,"oab"?: string | null,"perfil_id": string,"permissoes_extra"?: (string)[],"permissoes_negadas"?: (string)[],"telefone"?: string | null,"ultimo_acesso_em"?: string | null,"updated_at"?: string
                   }
                   Update: {
-                    "ativo"?: boolean,"cargo"?: string | null,"cor"?: string,"created_at"?: string,"email"?: string,"id"?: string,"nome"?: string,"oab"?: string | null,"perfil_id"?: string,"permissoes_extra"?: (string)[],"permissoes_negadas"?: (string)[],"telefone"?: string | null,"ultimo_acesso_em"?: string | null,"updated_at"?: string
+                    "ativo"?: boolean,"cargo"?: string | null,"cor"?: string,"created_at"?: string,"email"?: string,"id"?: string,"modo_simplificado"?: boolean,"nome"?: string,"oab"?: string | null,"perfil_id"?: string,"permissoes_extra"?: (string)[],"permissoes_negadas"?: (string)[],"telefone"?: string | null,"ultimo_acesso_em"?: string | null,"updated_at"?: string
                   }
                   Relationships: [
                     {
@@ -1811,6 +1811,9 @@ isOneToOne: false
                            },
 "meu_perfil":
 { Args: Record<PropertyKey, never>; Returns: Json
+                           },
+"modo_simplificado":
+{ Args: Record<PropertyKey, never>; Returns: boolean
                            },
 "nome_usuario":
 { Args: { "p_id": string }; Returns: string

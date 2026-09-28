@@ -66,7 +66,7 @@ type ItemAtividade =
   | { tipo: "evento"; data: string; evento: Evento };
 
 export function Atividade({ entidade, registroId, eventosPor, acoesExtras }: PropsAtividade) {
-  const { perfil } = useAuth();
+  const { perfil, simplificado } = useAuth();
   const config = useConfig();
   const { inserir, atualizar } = useGravacao();
   const [filtro, setFiltro] = useState<"tudo" | "comentarios" | "historico">("tudo");
@@ -199,7 +199,7 @@ export function Atividade({ entidade, registroId, eventosPor, acoesExtras }: Pro
                       {formatarRelativo(i.comentario.created_at)}
                     </time>
                     {i.comentario.editado_em && <span>(editado)</span>}
-                    {i.comentario.autor_id === perfil?.id && (
+                    {i.comentario.autor_id === perfil?.id && !simplificado && (
                       <button type="button" onClick={() => remover(i.comentario)} className="ml-auto font-semibold hover:text-crm-perigo">
                         Remover
                       </button>

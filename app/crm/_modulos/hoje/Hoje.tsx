@@ -49,6 +49,22 @@ const ICONES: Record<string, LucideIcon> = {
 
 const PADRAO_INDICADORES = Object.keys(PRESETS).map((id) => ({ id, visivel: true }));
 
+// Modo simplificado: somente estes indicadores, nesta ordem, de todo o escritório.
+const INDICADORES_SIMPLIFICADO = [
+  "tarefas_hoje",
+  "tarefas_atrasadas",
+  "prazos_proximos",
+  "prazos_vencidos",
+  "prazos_nao_conferidos",
+  "reunioes_hoje",
+  "casos_ativos",
+  "pagamentos_vencidos",
+].map((id) => ({ id, visivel: true }));
+
+function corDoTom(tom: Preset["tom"]) {
+  return tom === "perigo" ? "#B42318" : tom === "alerta" ? "#A15C07" : tom === "verde" ? "#3D7B3E" : "#263A2D";
+}
+
 function saudacao() {
   const h = Number(horaSP(new Date()).slice(0, 2));
   return h < 12 ? "Bom dia" : h < 18 ? "Boa tarde" : "Boa noite";
@@ -64,12 +80,13 @@ function lerMeus(padrao: boolean): boolean {
 }
 
 export default function Hoje() {
-  const { perfil, pode } = useAuth();
+  const { perfil, pode, simplificado } = useAuth();
   const config = useConfig();
-  const [somenteMeus, setSomenteMeus] = useState(true);
-  useEffect(() => setSomenteMeus(lerMeus(perfil?.perfil_id !== "admin")), [perfil?.perfil_id]);
+  const [preferenciaMeus, setPreferenciaMeus] = useState(true);
+  useEffect(() => setPreferenciaMeus(lerMeus(perfil?.perfil_id !== "admin")), [perfil?.perfil_id]);
+  const somenteMeus = !simplificado && preferenciaMeus;
   const alternar = (v: boolean) => {
-    setSomenteMeus(v);
+    setPreferenciaMeus(v);
     try {
       window.localStorage.setItem("crm.hoje.somenteMeus", v ? "1" : "0");
     } catch {
@@ -79,12 +96,14 @@ export default function Hoje() {
   const ctx = useContextoPreset(somenteMeus);
 
   const indicadores = useMemo(() => {
-    const cfg = config.cfg<{ indicadores?: { id: string; visivel: boolean }[] }>("painel", {}).indicadores ?? PADRAO_INDICADORES;
+    const cfg = simplificado
+      ? INDICADORES_SIMPLIFICADO
+      : config.cfg<{ indicadores?: { id: string; visivel: boolean }[] }>("painel", {}).indicadores ?? PADRAO_INDICADORES;
     return cfg
       .filter((i) => i.visivel && PRESETS[i.id])
       .map((i) => PRESETS[i.id])
       .filter((p) => !p.permissao || pode(p.permissao));
-  }, [config, pode]);
+  }, [config, pode, simplificado]);
 
   const contagens = useQuery({
     queryKey: ["painel", "contagens", indicadores.map((i) => i.id).join(","), somenteMeus],
@@ -109,6 +128,32 @@ export default function Hoje() {
 
   if (config.carregando || !ctx) return <Carregando />;
   const hoje = hojeSP();
+
+  if (simplificado) {
+    return (
+      <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 p-4 sm:p-8">
+        <div>
+          <h1 className="font-serif text-3xl font-semibold tracking-tight">
+            {saudacao()}, {primeiroNome(perfil?.nome)}
+          </h1>
+          <p className="mt-1 text-lg text-crm-tinta-2">{formatarDiaLongo(hoje)} · resumo de todo o escritório</p>
+        </div>
+        {contagens.error ? (
+          <div className="rounded-2xl border border-crm-linha bg-white">
+            <ErroCarga mensagem={mensagemErro(contagens.error)} aoTentarNovamente={() => contagens.refetch()} />
+          </div>
+        ) : (
+          <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4" aria-label="Indicadores">
+            {indicadores.map((p) => (
+              <li key={p.id}>
+                <IndicadorGrande preset={p} dado={contagens.data?.[p.id]} carregando={contagens.isLoading} destino={p.destino(ctx)} descricao={p.descricao(ctx)} />
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col gap-6 p-4 sm:p-6">
@@ -164,7 +209,7 @@ function Indicador({ preset, dado, carregando, destino, descricao }: { preset: P
   const Icone = ICONES[preset.id] ?? ListChecks;
   const total = dado?.total ?? 0;
   const atencao = (preset.tom === "perigo" || preset.tom === "alerta") && total > 0;
-  const faixa = preset.tom === "perigo" ? "#B42318" : preset.tom === "alerta" ? "#A15C07" : preset.tom === "verde" ? "#3D7B3E" : "#263A2D";
+  const faixa = corDoTom(preset.tom);
   return (
     <Link
       href={destino}
@@ -202,6 +247,49 @@ function Indicador({ preset, dado, carregando, destino, descricao }: { preset: P
           ) : null}
         </span>
       )}
+    </Link>
+  );
+}
+
+/** Versão ampliada do indicador para o modo simplificado: textos maiores e ação explícita. */
+function IndicadorGrande({ preset, dado, carregando, destino, descricao }: { preset: Preset; dado?: { total: number; valor: number | null }; carregando: boolean; destino: string; descricao: string }) {
+  const Icone = ICONES[preset.id] ?? ListChecks;
+  const total = dado?.total ?? 0;
+  const monitorado = preset.tom === "perigo" || preset.tom === "alerta";
+  const atencao = monitorado && total > 0;
+  const faixa = corDoTom(preset.tom);
+  return (
+    <Link
+      href={destino}
+      className="group flex h-full flex-col gap-3 rounded-2xl border-2 border-crm-tinta bg-white p-5 shadow-crm-bruto-verde transition-all hover:-translate-y-0.5 hover:shadow-[4px_5px_0_0_#263A2D]"
+      aria-label={`${preset.rotulo}: ${carregando ? "carregando" : total}. ${descricao} Abrir a lista.`}
+    >
+      <span className="flex items-center gap-3 text-lg font-semibold leading-tight text-crm-tinta">
+        <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl" style={{ backgroundColor: `${faixa}14`, color: faixa }}>
+          <Icone size={24} aria-hidden />
+        </span>
+        {preset.rotulo}
+      </span>
+      <span className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+        {carregando ? (
+          <span className="crm-esqueleto h-12 w-20" />
+        ) : (
+          <span className="text-5xl font-semibold tabular-nums" style={{ color: atencao ? faixa : "#1D2A21" }}>
+            {total.toLocaleString("pt-BR")}
+          </span>
+        )}
+        {dado?.valor !== null && dado?.valor !== undefined && !carregando && <span className="text-lg font-semibold text-crm-tinta-2">{formatarMoeda(dado.valor)}</span>}
+      </span>
+      <p className="text-[15px] leading-snug text-crm-tinta-2">{descricao}</p>
+      {!carregando && monitorado && (
+        <span className="flex items-center gap-1.5 text-[15px] font-bold" style={{ color: atencao ? faixa : "#2E6B33" }}>
+          {atencao ? <AlertTriangle size={18} aria-hidden /> : <CheckCircle2 size={18} aria-hidden />}
+          {atencao ? "Requer atenção" : "Em dia"}
+        </span>
+      )}
+      <span className="mt-auto inline-flex items-center gap-1.5 pt-1 text-base font-bold text-crm-folha group-hover:underline">
+        Abrir lista <ArrowRight size={18} className="transition-transform group-hover:translate-x-0.5" aria-hidden />
+      </span>
     </Link>
   );
 }

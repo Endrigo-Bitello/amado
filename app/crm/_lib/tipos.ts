@@ -66,6 +66,8 @@ export interface SessaoPerfil {
   ativo: boolean;
   perfil_id: string;
   perfil_nome: string;
+  /** Menu e painel reduzidos, sem opções de exclusão (ver migração do modo simplificado). */
+  modo_simplificado: boolean;
   permissoes: string[];
 }
 

@@ -250,7 +250,7 @@ export function AvisoIntegracaoTribunais() {
 }
 
 export function ListaProcessos({ casoId, casoTitulo, natureza }: { casoId: string; casoTitulo: string; natureza: string }) {
-  const { pode } = useAuth();
+  const { pode, simplificado } = useAuth();
   const { atualizar, excluir } = useGravacao();
   const consulta = useProcessosCaso(casoId);
   const [form, setForm] = useState<{ processo: Processo | null } | null>(null);
@@ -305,7 +305,7 @@ export function ListaProcessos({ casoId, casoTitulo, natureza }: { casoId: strin
                     itens={[
                       { rotulo: "Editar", icone: <Pencil size={15} />, aoSelecionar: () => setForm({ processo: p }) },
                       ...(!p.principal ? [{ rotulo: "Tornar principal", icone: <Star size={15} />, aoSelecionar: () => atualizar("processos", p.id, { principal: true }, { chaves: ["processos", "casos"], mensagemSucesso: "Processo principal alterado." }).catch(() => undefined) }] : []),
-                      { rotulo: "Remover do caso", icone: <Trash2 size={15} />, aoSelecionar: () => remover(p), perigo: true, separadorAntes: true },
+                      ...(!simplificado ? [{ rotulo: "Remover do caso", icone: <Trash2 size={15} />, aoSelecionar: () => remover(p), perigo: true, separadorAntes: true }] : []),
                     ]}
                     gatilho={(g) => (
                       <button {...g} type="button" className="rounded-lg border border-crm-linha px-2 py-1 text-xs font-semibold hover:bg-crm-suave" aria-label={`Ações do processo ${p.numero ?? "sem número"}`}>
@@ -444,7 +444,7 @@ export function FormAndamento({ aberto, aoFechar, casoId, processos, aoSugerirPr
 
 export function ListaAndamentos({ casoId, aoSugerirPrazo }: { casoId: string; aoSugerirPrazo?: (s: SugestaoPrazo) => void }) {
   const config = useConfig();
-  const { pode, perfil } = useAuth();
+  const { pode, perfil, simplificado } = useAuth();
   const { excluir } = useGravacao();
   const processos = useProcessosCaso(casoId);
   const [novo, setNovo] = useState(false);
@@ -502,7 +502,7 @@ export function ListaAndamentos({ casoId, aoSugerirPrazo }: { casoId: string; ao
                   <span className="ml-auto text-crm-tinta-3">
                     {a.fonte === "integracao" ? "Integração" : `Manual · ${config.usuario(a.registrado_por)?.nome ?? "—"}`}
                   </span>
-                  {pode("casos.editar") && (a.registrado_por === perfil?.id || perfil?.perfil_id === "admin") && (
+                  {pode("casos.editar") && !simplificado && (a.registrado_por === perfil?.id || perfil?.perfil_id === "admin") && (
                     <button
                       type="button"
                       className="rounded p-1 text-crm-tinta-3 hover:bg-crm-perigo-claro hover:text-crm-perigo"
@@ -597,7 +597,7 @@ function FormParte({ aberto, aoFechar, casoId, processos, parte }: { aberto: boo
 
 export function ListaPartes({ casoId, compacto }: { casoId: string; compacto?: boolean }) {
   const config = useConfig();
-  const { pode } = useAuth();
+  const { pode, simplificado } = useAuth();
   const { excluir } = useGravacao();
   const processos = useProcessosCaso(casoId);
   const [form, setForm] = useState<{ parte: Parte | null } | null>(null);
@@ -631,14 +631,16 @@ export function ListaPartes({ casoId, compacto }: { casoId: string; compacto?: b
                   rotulo={`Ações da parte ${p.nome}`}
                   itens={[
                     { rotulo: "Editar", icone: <Pencil size={15} />, aoSelecionar: () => setForm({ parte: p }) },
-                    {
-                      rotulo: "Remover",
-                      icone: <Trash2 size={15} />,
-                      perigo: true,
-                      aoSelecionar: async () => {
-                        if (await confirmarSimples({ titulo: "Remover parte?", mensagem: `${p.nome} será removida do caso.`, confirmar: "Remover", perigo: true })) excluir("partes", p.id, { chaves: ["partes"] }).catch(() => undefined);
-                      },
-                    },
+                    ...(!simplificado
+                      ? [{
+                          rotulo: "Remover",
+                          icone: <Trash2 size={15} />,
+                          perigo: true,
+                          aoSelecionar: async () => {
+                            if (await confirmarSimples({ titulo: "Remover parte?", mensagem: `${p.nome} será removida do caso.`, confirmar: "Remover", perigo: true })) excluir("partes", p.id, { chaves: ["partes"] }).catch(() => undefined);
+                          },
+                        }]
+                      : []),
                   ]}
                   gatilho={(g) => (
                     <button {...g} type="button" className="rounded p-1 text-xs font-semibold text-crm-tinta-2 hover:bg-crm-suave" aria-label={`Ações da parte ${p.nome}`}>
