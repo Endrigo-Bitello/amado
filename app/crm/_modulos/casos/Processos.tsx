@@ -444,7 +444,7 @@ export function FormAndamento({ aberto, aoFechar, casoId, processos, aoSugerirPr
 
 export function ListaAndamentos({ casoId, aoSugerirPrazo }: { casoId: string; aoSugerirPrazo?: (s: SugestaoPrazo) => void }) {
   const config = useConfig();
-  const { pode, perfil, simplificado } = useAuth();
+  const { pode, perfil, simplificado, desenvolvedor } = useAuth();
   const { excluir } = useGravacao();
   const processos = useProcessosCaso(casoId);
   const [novo, setNovo] = useState(false);
@@ -502,7 +502,7 @@ export function ListaAndamentos({ casoId, aoSugerirPrazo }: { casoId: string; ao
                   <span className="ml-auto text-crm-tinta-3">
                     {a.fonte === "integracao" ? "Integração" : `Manual · ${config.usuario(a.registrado_por)?.nome ?? "—"}`}
                   </span>
-                  {pode("casos.editar") && !simplificado && (a.registrado_por === perfil?.id || perfil?.perfil_id === "admin") && (
+                  {pode("casos.editar") && !simplificado && (a.registrado_por === perfil?.id || perfil?.perfil_id === "admin" || desenvolvedor) && (
                     <button
                       type="button"
                       className="rounded p-1 text-crm-tinta-3 hover:bg-crm-perigo-claro hover:text-crm-perigo"

@@ -507,6 +507,19 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"desenvolvedores": {
+                  Row: {
+                    "created_at": string,"email": string
+                  }
+                  Insert: {
+                    "created_at"?: string,"email": string
+                  }
+                  Update: {
+                    "created_at"?: string,"email"?: string
+                  }
+                  Relationships: [
+                    
+                  ]
                 },"despesas": {
                   Row: {
                     "cancelada_em": string | null,"cancelada_por": string | null,"caso_id": string | null,"categoria": string,"cliente_id": string,"cobranca_reembolso_id": string | null,"comprovante_arquivo_id": string | null,"data": string,"descricao": string,"id": string,"motivo_cancelamento": string | null,"observacao": string | null,"pago_por": string,"reembolsavel": boolean,"registrado_em": string,"registrado_por": string,"valor": number
@@ -1716,6 +1729,9 @@ isOneToOne: false
 "criar_caso":
 { Args: { "p": Json }; Returns: string
                            },
+"dev_excluir":
+{ Args: { "p_id": string,"p_tipo": string }; Returns: Json
+                           },
 "doc_criar_solicitacao":
 { Args: { "p": Json,"p_ator": string }; Returns: Json
                            },
@@ -1724,6 +1740,12 @@ isOneToOne: false
                            },
 "eh_admin":
 { Args: Record<PropertyKey, never>; Returns: boolean
+                           },
+"eh_desenvolvedor":
+{ Args: Record<PropertyKey, never>; Returns: boolean
+                           },
+"eh_desenvolvedor_usuario":
+{ Args: { "p_usuario": string }; Returns: boolean
                            },
 "eh_responsavel":
 { Args: { "p_caso"?: string,"p_cliente": string,"p_lead"?: string }; Returns: boolean

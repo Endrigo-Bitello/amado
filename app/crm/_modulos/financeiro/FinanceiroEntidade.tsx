@@ -1,7 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { Ban, Download, FilePlus2, HandCoins, Lock, MoreHorizontal, Paperclip, Pencil, Plus, Receipt, RotateCcw, Undo2 } from "lucide-react";
+import { Ban, Download, FilePlus2, HandCoins, Lock, MoreHorizontal, Paperclip, Pencil, Plus, Receipt, RotateCcw, Trash2, Undo2 } from "lucide-react";
 import { Fragment, useMemo, useState } from "react";
 import { useAuth } from "../../_lib/auth";
 import { aviso } from "../../_lib/avisos";
@@ -69,7 +69,7 @@ export function resumoFinanceiro(cobrancas: CobrancaSituacao[], despesas: Despes
 }
 
 export function FinanceiroEntidade({ cliente, casoId, casos }: Props) {
-  const { pode } = useAuth();
+  const { pode, desenvolvedor } = useAuth();
   const config = useConfig();
   const consulta = useFinanceiroEntidade(cliente.id, casoId, pode("financeiro.ver"));
   const acoes = useAcoesFinanceiras();
@@ -126,11 +126,15 @@ export function FinanceiroEntidade({ cliente, casoId, casos }: Props) {
     const pagamentos = dados.pagamentos.filter((p) => p.cobranca_id === c.id);
     const reembolsos = dados.reembolsos.filter((r) => r.cobranca_id === c.id);
     const aberta = expandida === c.id;
+    const cancelada = c.situacao === "cancelado";
+    // A conta de desenvolvimento vê todas as ações, em qualquer situação.
     const itensMenu = [
-      ...(podeLancar && c.situacao !== "cancelado" && Number(c.saldo) > 0 ? [{ rotulo: "Registrar pagamento", icone: <HandCoins size={15} />, aoSelecionar: () => setPagar(c) }] : []),
-      ...((podeContratos || pode("financeiro.desconto")) && c.situacao !== "cancelado" ? [{ rotulo: "Editar / conceder desconto", icone: <Pencil size={15} />, aoSelecionar: () => setEditar(c) }] : []),
-      ...(podeContratos && Number(c.valor_pago) - Number(c.valor_reembolsado) > 0 ? [{ rotulo: "Registrar reembolso ao cliente", icone: <RotateCcw size={15} />, aoSelecionar: () => setReembolsar(c) }] : []),
-      ...(podeContratos && c.situacao !== "cancelado" ? [{ rotulo: "Cancelar cobrança", icone: <Ban size={15} />, aoSelecionar: () => acoes.cancelarCobranca(c), perigo: true, separadorAntes: true }] : []),
+      ...(podeLancar && (desenvolvedor || (!cancelada && Number(c.saldo) > 0)) ? [{ rotulo: "Registrar pagamento", icone: <HandCoins size={15} />, aoSelecionar: () => setPagar(c) }] : []),
+      ...((podeContratos || pode("financeiro.desconto")) && (desenvolvedor || !cancelada) ? [{ rotulo: "Editar / conceder desconto", icone: <Pencil size={15} />, aoSelecionar: () => setEditar(c) }] : []),
+      ...(podeContratos && (desenvolvedor || Number(c.valor_pago) - Number(c.valor_reembolsado) > 0) ? [{ rotulo: "Registrar reembolso ao cliente", icone: <RotateCcw size={15} />, aoSelecionar: () => setReembolsar(c) }] : []),
+      ...(podeContratos && !cancelada ? [{ rotulo: "Cancelar cobrança", icone: <Ban size={15} />, aoSelecionar: () => acoes.cancelarCobranca(c), perigo: true, separadorAntes: true }] : []),
+      ...(desenvolvedor && cancelada ? [{ rotulo: "Reabrir cobrança", icone: <Undo2 size={15} />, aoSelecionar: () => acoes.reabrirCobranca(c.id!), separadorAntes: true }] : []),
+      ...(desenvolvedor ? [{ rotulo: "Excluir definitivamente", icone: <Trash2 size={15} />, aoSelecionar: () => acoes.excluirCobranca(c), perigo: true }] : []),
     ];
     return (
       <Fragment key={c.id}>
@@ -183,7 +187,7 @@ export function FinanceiroEntidade({ cliente, casoId, casos }: Props) {
                         </button>
                       )}
                       {p.estornado_em ? (
-                        <Selo tom="neutro">Estornado: {p.motivo_estorno}</Selo>
+                        <Selo tom="neutro">Estornado{p.motivo_estorno ? `: ${p.motivo_estorno}` : ""}</Selo>
                       ) : (
                         podeLancar && (
                           <button type="button" onClick={() => acoes.estornarPagamento(p.id)} className="inline-flex items-center gap-0.5 font-semibold text-crm-perigo hover:underline">
@@ -191,11 +195,26 @@ export function FinanceiroEntidade({ cliente, casoId, casos }: Props) {
                           </button>
                         )
                       )}
+                      {desenvolvedor && p.estornado_em && (
+                        <button type="button" onClick={() => acoes.desfazerEstorno(p.id)} className="inline-flex items-center gap-0.5 font-semibold text-crm-info hover:underline">
+                          <RotateCcw size={11} /> desfazer estorno
+                        </button>
+                      )}
+                      {desenvolvedor && (
+                        <button type="button" onClick={() => acoes.excluirPagamento(p.id)} className="inline-flex items-center gap-0.5 font-semibold text-crm-perigo hover:underline">
+                          <Trash2 size={11} /> excluir
+                        </button>
+                      )}
                     </li>
                   ))}
                   {reembolsos.map((r) => (
                     <li key={r.id} className="flex items-center gap-2 text-[#6D5BA6]">
                       <RotateCcw size={12} aria-hidden /> Reembolso de <strong className="tabular-nums">{formatarMoeda(r.valor)}</strong> em {formatarData(r.data)} — {r.motivo}
+                      {desenvolvedor && (
+                        <button type="button" onClick={() => acoes.excluirReembolso(r.id)} className="inline-flex items-center gap-0.5 font-semibold text-crm-perigo hover:underline">
+                          <Trash2 size={11} /> excluir
+                        </button>
+                      )}
                     </li>
                   ))}
                 </ul>
@@ -304,6 +323,11 @@ export function FinanceiroEntidade({ cliente, casoId, casos }: Props) {
                     {ct.percentual_exito ? ` · êxito ${ct.percentual_exito}%` : ""}
                     {ct.data_assinatura ? ` · assinado em ${formatarData(ct.data_assinatura)}` : ""}
                   </span>
+                  {desenvolvedor && (
+                    <button type="button" onClick={() => acoes.excluirContrato(ct.id, ct.descricao)} className="ml-auto inline-flex items-center gap-1 text-xs font-semibold text-crm-perigo hover:underline">
+                      <Trash2 size={12} /> Excluir contrato
+                    </button>
+                  )}
                 </div>
                 {lista.length > 0 ? tabelaCobrancas(lista) : <p className="text-xs text-crm-tinta-3">Sem parcelas (ex.: somente êxito).</p>}
               </section>
@@ -336,6 +360,16 @@ export function FinanceiroEntidade({ cliente, casoId, casos }: Props) {
                     {!d.cancelada_em && podeLancar && (
                       <button type="button" onClick={() => acoes.cancelarDespesa(d.id)} className="text-xs font-semibold text-crm-perigo hover:underline">
                         cancelar
+                      </button>
+                    )}
+                    {desenvolvedor && d.cancelada_em && (
+                      <button type="button" onClick={() => acoes.reativarDespesa(d.id)} className="text-xs font-semibold text-crm-info hover:underline">
+                        reativar
+                      </button>
+                    )}
+                    {desenvolvedor && (
+                      <button type="button" onClick={() => acoes.excluirDespesa(d.id)} className="text-xs font-semibold text-crm-perigo hover:underline">
+                        excluir
                       </button>
                     )}
                   </li>

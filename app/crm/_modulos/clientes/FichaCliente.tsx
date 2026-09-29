@@ -9,6 +9,7 @@ import { colunaEtiquetas, colunaResponsavel, opcoesLista } from "../../_lib/colu
 import { useConfig } from "../../_lib/config";
 import { formatarData, formatarDataHora } from "../../_lib/datas";
 import { ErroCrm, executar, mensagemErro, useGravacao } from "../../_lib/dados";
+import { excluirComoDev } from "../../_lib/dev";
 import { documentoValido, formatarDocumento, formatarMoeda, formatarTelefone, linkWhatsApp } from "../../_lib/formatos";
 import { Link, navegar, useRota } from "../../_lib/rotas";
 import { supabase } from "../../_lib/supabase";
@@ -35,10 +36,10 @@ type CasoResumo = Caso & { processos: Pick<Processo, "id" | "numero" | "tribunal
 
 
 export default function FichaCliente({ id }: { id: string }) {
-  const { pode } = useAuth();
+  const { pode, desenvolvedor } = useAuth();
   const config = useConfig();
   const { parametro, definirParametros } = useRota();
-  const { atualizar, excluir } = useGravacao();
+  const { atualizar, excluir, invalidar } = useGravacao();
   const aba = parametro("aba") ?? "visao";
   const [novoCaso, setNovoCaso] = useState(false);
   const [contato, setContato] = useState(false);
@@ -129,6 +130,18 @@ export default function FichaCliente({ id }: { id: string }) {
     await atualizar("clientes", c.id, { arquivado_em: arquivado ? null : new Date().toISOString() }, { chaves: ["clientes"], mensagemSucesso: arquivado ? "Cliente restaurado." : "Cliente arquivado." }).catch(() => undefined);
   };
   const excluirDefinitivo = async () => {
+    if (desenvolvedor) {
+      if (!(await confirmarSimples({ titulo: "Excluir o cliente e tudo o que está ligado a ele?", mensagem: "Casos, processos, prazos, tarefas, documentos, arquivos e todos os lançamentos financeiros deste cliente serão apagados. Esta ação não pode ser desfeita.", confirmar: "Excluir tudo", perigo: true }))) return;
+      try {
+        await excluirComoDev("cliente", c.id);
+        aviso.sucesso("Cliente excluído.");
+        invalidar("clientes", "casos", "financeiro", "painel");
+        navegar("/crm/clientes");
+      } catch (e) {
+        aviso.erro(mensagemErro(e));
+      }
+      return;
+    }
     if (!(await confirmarSimples({ titulo: "Excluir cliente definitivamente?", mensagem: "Só é possível excluir clientes sem casos e sem lançamentos financeiros. Prefira arquivar. Esta ação não pode ser desfeita.", confirmar: "Excluir definitivamente", perigo: true }))) return;
     try {
       await excluir("clientes", c.id, { mensagemSucesso: "Cliente excluído." });

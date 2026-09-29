@@ -15,6 +15,7 @@ import {
   Paperclip,
   Send,
   ShieldCheck,
+  Trash2,
   Upload,
   X,
 } from "lucide-react";
@@ -32,7 +33,7 @@ import type { Arquivo, Documento, DocumentoHistorico, Solicitacao } from "../_li
 import { Abas } from "../_ui/Abas";
 import { Botao } from "../_ui/Botao";
 import { AreaTexto, CaixaSelecao, Entrada, GrupoCampo, Selecao } from "../_ui/Campos";
-import { confirmar } from "../_ui/Dialogos";
+import { confirmar, confirmarSimples } from "../_ui/Dialogos";
 import { ListaBusca, SeletorCampo } from "../_ui/Seletores";
 import { Modal, Popover } from "../_ui/Sobreposicoes";
 import { BarraProgresso, Carregando, ErroCarga, Pilula, Selo, Vazio } from "../_ui/Visuais";
@@ -76,7 +77,7 @@ export function useDocumentos(escopo: EscopoDocumentos) {
 
 /** Alteração de situação com as regras do checklist (motivo obrigatório para rejeitar/dispensar). */
 export function useMudarStatusDocumento() {
-  const { pode } = useAuth();
+  const { pode, desenvolvedor } = useAuth();
   const { atualizar } = useGravacao();
   return useCallback(
     async (d: Pick<Documento, "id" | "nome" | "status">, status: string) => {
@@ -90,7 +91,7 @@ export function useMudarStatusDocumento() {
         const r = await confirmar({
           titulo: status === "rejeitado" ? "Rejeitar documento" : "Dispensar documento",
           mensagem: status === "rejeitado" ? `Informe por que “${d.nome}” precisa ser reenviado. O motivo fica no histórico (não é mostrado ao cliente).` : `Informe por que “${d.nome}” não é exigido neste caso.`,
-          motivo: { rotulo: "Motivo", obrigatorio: true },
+          motivo: { rotulo: "Motivo", obrigatorio: !desenvolvedor },
           confirmar: status === "rejeitado" ? "Rejeitar" : "Dispensar",
           perigo: status === "rejeitado",
         });
@@ -100,7 +101,7 @@ export function useMudarStatusDocumento() {
       }
       await atualizar("documentos", d.id, alteracoes, { chaves: ["documentos", "painel", "eventos"] }).catch(() => undefined);
     },
-    [pode, atualizar],
+    [pode, desenvolvedor, atualizar],
   );
 }
 
@@ -367,8 +368,8 @@ function LinhaDocumento({
 
 export function DetalheDocumento({ documento: d, aoFechar }: { documento: Documento | null; aoFechar: () => void }) {
   const config = useConfig();
-  const { pode } = useAuth();
-  const { atualizar } = useGravacao();
+  const { pode, desenvolvedor } = useAuth();
+  const { atualizar, excluir } = useGravacao();
   const [aba, setAba] = useState("arquivos");
   const historico = useQuery({
     queryKey: ["documentos", "historico", d?.id],
@@ -379,9 +380,31 @@ export function DetalheDocumento({ documento: d, aoFechar }: { documento: Docume
   const podeEditar = pode("documentos.editar");
   const salvar = (alt: Record<string, unknown>) => atualizar("documentos", d.id, alt, { chaves: ["documentos"] }).catch(() => undefined);
   const status = STATUS_DOCUMENTO.find((s) => s.valor === d.status);
+  const excluirDocumento = async () => {
+    if (!(await confirmarSimples({ titulo: `Excluir “${d.nome}” do checklist?`, mensagem: "O documento e o histórico dele serão apagados. As versões já enviadas continuam em Arquivos. Esta ação não pode ser desfeita.", confirmar: "Excluir definitivamente", perigo: true }))) return;
+    try {
+      await excluir("documentos", d.id, { chaves: ["documentos", "painel", "eventos"], mensagemSucesso: "Documento excluído." });
+      aoFechar();
+    } catch {
+      /* aviso exibido pela camada de dados */
+    }
+  };
 
   return (
-    <Modal aberto aoFechar={aoFechar} largura="lg" titulo={d.nome} descricao={<span className="inline-flex items-center gap-2">Situação: <Pilula cor={status?.cor}>{status?.rotulo}</Pilula></span>}>
+    <Modal
+      aberto
+      aoFechar={aoFechar}
+      largura="lg"
+      titulo={d.nome}
+      descricao={<span className="inline-flex items-center gap-2">Situação: <Pilula cor={status?.cor}>{status?.rotulo}</Pilula></span>}
+      rodape={
+        desenvolvedor ? (
+          <Botao variante="perigo" icone={<Trash2 size={14} />} onClick={excluirDocumento}>
+            Excluir documento
+          </Botao>
+        ) : undefined
+      }
+    >
       <Abas
         rotulo="Detalhes do documento"
         ativa={aba}

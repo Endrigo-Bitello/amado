@@ -66,9 +66,9 @@ type ItemAtividade =
   | { tipo: "evento"; data: string; evento: Evento };
 
 export function Atividade({ entidade, registroId, eventosPor, acoesExtras }: PropsAtividade) {
-  const { perfil, simplificado } = useAuth();
+  const { perfil, simplificado, desenvolvedor } = useAuth();
   const config = useConfig();
-  const { inserir, atualizar } = useGravacao();
+  const { inserir, atualizar, excluir } = useGravacao();
   const [filtro, setFiltro] = useState<"tudo" | "comentarios" | "historico">("tudo");
   const [texto, setTexto] = useState("");
   const [mencoes, setMencoes] = useState<string[]>([]);
@@ -113,6 +113,11 @@ export function Atividade({ entidade, registroId, eventosPor, acoesExtras }: Pro
   const remover = async (c: Comentario) => {
     if (!(await confirmarSimples({ titulo: "Remover comentário?", mensagem: "O comentário deixará de aparecer para a equipe.", confirmar: "Remover", perigo: true }))) return;
     await atualizar("comentarios", c.id, { removido_em: new Date().toISOString() }, { chaves: ["comentarios"] });
+  };
+
+  const excluirEvento = async (e: Evento) => {
+    if (!(await confirmarSimples({ titulo: "Excluir da linha do tempo?", mensagem: `“${e.titulo}” deixará de aparecer no histórico. Esta ação não pode ser desfeita.`, confirmar: "Excluir", perigo: true }))) return;
+    await excluir("eventos", String(e.id), { chaves: ["eventos"] }).catch(() => undefined);
   };
 
   const carregando = comentarios.isLoading || (eventosPor && eventos.isLoading);
@@ -199,7 +204,7 @@ export function Atividade({ entidade, registroId, eventosPor, acoesExtras }: Pro
                       {formatarRelativo(i.comentario.created_at)}
                     </time>
                     {i.comentario.editado_em && <span>(editado)</span>}
-                    {i.comentario.autor_id === perfil?.id && !simplificado && (
+                    {(i.comentario.autor_id === perfil?.id || desenvolvedor) && !simplificado && (
                       <button type="button" onClick={() => remover(i.comentario)} className="ml-auto font-semibold hover:text-crm-perigo">
                         Remover
                       </button>
@@ -230,6 +235,11 @@ export function Atividade({ entidade, registroId, eventosPor, acoesExtras }: Pro
                     </span>
                   ) : (
                     i.evento.autor_id && <span>por {config.usuario(i.evento.autor_id)?.nome ?? "usuário"}</span>
+                  )}
+                  {desenvolvedor && (
+                    <button type="button" onClick={() => excluirEvento(i.evento)} className="ml-auto font-semibold hover:text-crm-perigo">
+                      Excluir
+                    </button>
                   )}
                 </p>
               </li>

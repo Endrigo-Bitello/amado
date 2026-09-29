@@ -8,6 +8,7 @@ import { aviso } from "../../_lib/avisos";
 import { useConfig } from "../../_lib/config";
 import { formatarData, formatarDataHora, formatarRelativo, situacaoVencimento } from "../../_lib/datas";
 import { executar, mensagemErro, useGravacao } from "../../_lib/dados";
+import { excluirComoDev } from "../../_lib/dev";
 import { linkWhatsApp } from "../../_lib/formatos";
 import { Link, navegar, useRota } from "../../_lib/rotas";
 import { supabase } from "../../_lib/supabase";
@@ -38,10 +39,10 @@ type LinkExterno = { titulo: string; url: string };
 const SEM_PENDENCIAS = new Map<string, PendenciasCaso>();
 
 export default function FichaCaso({ id }: { id: string }) {
-  const { pode } = useAuth();
+  const { pode, desenvolvedor } = useAuth();
   const config = useConfig();
   const { parametro, definirParametros } = useRota();
-  const { atualizar, excluir } = useGravacao();
+  const { atualizar, excluir, invalidar } = useGravacao();
   const aba = parametro("aba") ?? "visao";
   const [novoPrazo, setNovoPrazo] = useState<SugestaoPrazoForm | null>(null);
   const [andamento, setAndamento] = useState(false);
@@ -114,10 +115,23 @@ export default function FichaCaso({ id }: { id: string }) {
     await atualizar("casos", c.id, { arquivado_em: arquivado ? null : new Date().toISOString() }, { chaves: ["casos"], mensagemSucesso: arquivado ? "Caso restaurado." : "Caso arquivado." }).catch(() => undefined);
   };
   const excluirDefinitivo = async () => {
+    const destino = c.cliente ? `/crm/clientes/${c.cliente.id}?aba=casos` : "/crm/casos";
+    if (desenvolvedor) {
+      if (!(await confirmarSimples({ titulo: "Excluir o caso e tudo o que está ligado a ele?", mensagem: "Processos, andamentos, prazos, checklist, documentos, arquivos e tarefas deste caso serão apagados. Os lançamentos financeiros continuam no cliente, sem o vínculo com o caso. Esta ação não pode ser desfeita.", confirmar: "Excluir tudo", perigo: true }))) return;
+      try {
+        await excluirComoDev("caso", c.id);
+        aviso.sucesso("Caso excluído.");
+        invalidar("casos", "financeiro", "painel");
+        navegar(destino);
+      } catch (e) {
+        aviso.erro(mensagemErro(e));
+      }
+      return;
+    }
     if (!(await confirmarSimples({ titulo: "Excluir caso definitivamente?", mensagem: "Processos, andamentos, prazos, checklist e tarefas deste caso serão apagados. Casos com lançamentos financeiros não podem ser excluídos. Prefira arquivar. Esta ação não pode ser desfeita.", confirmar: "Excluir definitivamente", perigo: true }))) return;
     try {
       await excluir("casos", c.id, { chaves: ["casos", "painel"], mensagemSucesso: "Caso excluído." });
-      navegar(c.cliente ? `/crm/clientes/${c.cliente.id}?aba=casos` : "/crm/casos");
+      navegar(destino);
     } catch {
       /* aviso já exibido */
     }

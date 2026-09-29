@@ -1,15 +1,17 @@
 "use client";
 
 import { useInfiniteQuery } from "@tanstack/react-query";
-import { ChevronDown, ChevronRight, ShieldCheck } from "lucide-react";
+import { ChevronDown, ChevronRight, ShieldCheck, Trash2 } from "lucide-react";
 import { useState } from "react";
+import { useAuth } from "../../_lib/auth";
 import { useConfig } from "../../_lib/config";
 import { formatarDataHora, hojeSP, inicioDiaSP, somarDias } from "../../_lib/datas";
-import { executar, mensagemErro } from "../../_lib/dados";
+import { executar, mensagemErro, useGravacao } from "../../_lib/dados";
 import { supabase } from "../../_lib/supabase";
 import type { Auditoria } from "../../_lib/tipos";
 import { Botao } from "../../_ui/Botao";
 import { Selecao } from "../../_ui/Campos";
+import { confirmarSimples } from "../../_ui/Dialogos";
 import { Carregando, ErroCarga, Selo, Vazio } from "../../_ui/Visuais";
 import { SecaoAdmin } from "./comum";
 
@@ -51,6 +53,8 @@ const PAGINA = 100;
 
 export function AdminAuditoria() {
   const config = useConfig();
+  const { desenvolvedor } = useAuth();
+  const { excluir } = useGravacao();
   const [tabela, setTabela] = useState("");
   const [acao, setAcao] = useState("");
   const [usuario, setUsuario] = useState("");
@@ -69,6 +73,10 @@ export function AdminAuditoria() {
     getNextPageParam: (ultima, todas) => (ultima.length === PAGINA ? todas.length * PAGINA : undefined),
   });
   const linhas = consulta.data?.pages.flat() ?? [];
+  const excluirRegistro = async (id: number) => {
+    if (!(await confirmarSimples({ titulo: "Excluir registro da auditoria?", mensagem: "O registro deixa de existir. Esta ação não pode ser desfeita.", confirmar: "Excluir", perigo: true }))) return;
+    await excluir("auditoria", String(id), { chaves: ["auditoria"], mensagemSucesso: "Registro excluído." }).catch(() => undefined);
+  };
 
   return (
     <SecaoAdmin
@@ -136,6 +144,11 @@ export function AdminAuditoria() {
                 <th className="px-3 py-2">Ação</th>
                 <th className="px-3 py-2">Área</th>
                 <th className="px-3 py-2">Detalhes</th>
+                {desenvolvedor && (
+                  <th className="px-2 py-2">
+                    <span className="sr-only">Excluir</span>
+                  </th>
+                )}
               </tr>
             </thead>
             <tbody>
@@ -167,6 +180,13 @@ export function AdminAuditoria() {
                         </>
                       )}
                     </td>
+                    {desenvolvedor && (
+                      <td className="px-2 py-2 text-right">
+                        <button type="button" onClick={() => excluirRegistro(l.id)} className="rounded p-1 text-crm-tinta-3 hover:bg-crm-perigo-claro hover:text-crm-perigo" aria-label="Excluir registro da auditoria">
+                          <Trash2 size={14} />
+                        </button>
+                      </td>
+                    )}
                   </tr>
                 );
               })}

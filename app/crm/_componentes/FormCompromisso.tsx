@@ -1,5 +1,6 @@
 "use client";
 
+import { Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useAuth } from "../_lib/auth";
 import { opcoesLista, opcoesUsuarios } from "../_lib/colunas";
@@ -9,6 +10,7 @@ import { useGravacao } from "../_lib/dados";
 import type { Compromisso } from "../_lib/tipos";
 import { Botao } from "../_ui/Botao";
 import { AreaTexto, CaixaSelecao, Entrada, GrupoCampo, Selecao } from "../_ui/Campos";
+import { confirmarSimples } from "../_ui/Dialogos";
 import { SeletorCampo, SeletorMultiplo } from "../_ui/Seletores";
 import { Modal } from "../_ui/Sobreposicoes";
 import { SeletorRegistro, type RegistroSelecionado } from "./SeletorRegistro";
@@ -31,9 +33,9 @@ const LEMBRETES = [
 ];
 
 export function FormCompromisso({ aberto, aoFechar, vinculo, dataInicial, compromisso, tipoInicial }: Props) {
-  const { perfil, pode } = useAuth();
+  const { perfil, pode, desenvolvedor } = useAuth();
   const config = useConfig();
-  const { inserir, atualizar } = useGravacao();
+  const { inserir, atualizar, excluir } = useGravacao();
   const [tipo, setTipo] = useState<string | null>("reuniao");
   const [titulo, setTitulo] = useState("");
   const [data, setData] = useState(hojeSP());
@@ -138,6 +140,17 @@ export function FormCompromisso({ aberto, aoFechar, vinculo, dataInicial, compro
     }
   };
 
+  const excluirCompromisso = async () => {
+    if (!compromisso) return;
+    if (!(await confirmarSimples({ titulo: "Excluir compromisso?", mensagem: `“${compromisso.titulo}” será apagado da agenda. Esta ação não pode ser desfeita.`, confirmar: "Excluir definitivamente", perigo: true }))) return;
+    try {
+      await excluir("compromissos", compromisso.id, { chaves: ["compromissos", "agenda", "painel", "eventos"], mensagemSucesso: "Compromisso excluído." });
+      aoFechar();
+    } catch {
+      /* aviso exibido pela camada de dados */
+    }
+  };
+
   return (
     <Modal
       aberto={aberto}
@@ -147,6 +160,11 @@ export function FormCompromisso({ aberto, aoFechar, vinculo, dataInicial, compro
       largura="md"
       rodape={
         <>
+          {compromisso && desenvolvedor && (
+            <Botao variante="perigo" icone={<Trash2 size={14} />} onClick={excluirCompromisso} className="sm:mr-auto">
+              Excluir
+            </Botao>
+          )}
           <Botao onClick={aoFechar}>Cancelar</Botao>
           <Botao variante="primario" carregando={salvando} onClick={salvar}>
             {compromisso ? "Salvar" : "Agendar"}
